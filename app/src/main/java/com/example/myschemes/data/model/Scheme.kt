@@ -14,4 +14,19 @@ data class Scheme(
     val lastRevisionDate: Long,
     val nextRevisionDate: Long,
     val schemeNumber: String? = null
-) : Serializable
+) : Serializable {
+
+    fun getStatus(): SchemeStatus {
+        val today = System.currentTimeMillis()
+        val daysLeft = ((nextRevisionDate - today) / (1000 * 60 * 60 * 24)).toInt()
+        return when {
+            daysLeft < 0 -> SchemeStatus.EXPIRED
+            daysLeft <= 30 -> SchemeStatus.EXPIRING
+            else -> SchemeStatus.ACTIVE
+        }
+    }
+}
+
+enum class SchemeStatus {
+    ACTIVE, EXPIRING, EXPIRED
+}

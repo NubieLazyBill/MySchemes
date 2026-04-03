@@ -34,4 +34,11 @@
         android:gravity="center"
         android:visibility="gone" />
 
+    <Button
+        android:id="@+id/btnTestNotification"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🔔 Тест уведомления"
+        android:layout_marginBottom="8dp" />
+
 </LinearLayout>

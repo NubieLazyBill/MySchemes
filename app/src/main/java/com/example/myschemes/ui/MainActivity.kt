@@ -8,17 +8,21 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.*
 import com.example.myschemes.R
 import com.example.myschemes.data.database.SchemeDatabase
 import com.example.myschemes.data.repository.SchemeRepository
 import com.example.myschemes.utils.CsvImporter
+import com.example.myschemes.worker.NotificationWorker
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: SchemeAdapter
     private lateinit var btnImport: Button
+    private lateinit var btnTestNotification: Button  // ← добавил
     private lateinit var tvEmpty: TextView
     private lateinit var repository: SchemeRepository
 
@@ -28,12 +32,12 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.rvSchemes)
         btnImport = findViewById(R.id.btnImport)
+        btnTestNotification = findViewById(R.id.btnTestNotification)  // ← добавил
         tvEmpty = findViewById(R.id.tvEmpty)
 
         val database = SchemeDatabase.getInstance(this)
         repository = SchemeRepository(database.schemeDao())
 
-        // ИСПРАВЛЕННЫЙ АДАПТЕР С ПЕРЕХОДОМ
         adapter = SchemeAdapter(emptyList()) { scheme ->
             val intent = Intent(this, DetailActivity::class.java)
             intent.putExtra("scheme", scheme)
@@ -48,6 +52,26 @@ class MainActivity : AppCompatActivity() {
         btnImport.setOnClickListener {
             importSchemes()
         }
+
+        btnTestNotification.setOnClickListener {
+            val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
+                .build()
+            WorkManager.getInstance(this).enqueue(workRequest)
+        }
+
+        setupNotifications()
+    }
+
+    private fun setupNotifications() {
+        val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(
+            1, TimeUnit.DAYS
+        ).build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "schemes_notification",
+            ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
     }
 
     private fun loadSchemes() {
