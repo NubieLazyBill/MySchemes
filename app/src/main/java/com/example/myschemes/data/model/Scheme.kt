@@ -2,6 +2,7 @@ package com.example.myschemes.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 
 @Entity(tableName = "schemes")
 data class Scheme(
@@ -13,4 +14,4 @@ data class Scheme(
     val lastRevisionDate: Long,
     val nextRevisionDate: Long,
     val schemeNumber: String? = null
-)
+) : Serializable

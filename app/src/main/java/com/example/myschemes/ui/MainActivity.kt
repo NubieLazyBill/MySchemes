@@ -1,5 +1,6 @@
 package com.example.myschemes.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -32,9 +33,13 @@ class MainActivity : AppCompatActivity() {
         val database = SchemeDatabase.getInstance(this)
         repository = SchemeRepository(database.schemeDao())
 
+        // ИСПРАВЛЕННЫЙ АДАПТЕР С ПЕРЕХОДОМ
         adapter = SchemeAdapter(emptyList()) { scheme ->
-            // TODO: открыть детали
+            val intent = Intent(this, DetailActivity::class.java)
+            intent.putExtra("scheme", scheme)
+            startActivity(intent)
         }
+
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
