@@ -16,13 +16,21 @@ import com.example.myschemes.utils.CsvImporter
 import com.example.myschemes.worker.NotificationWorker
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import android.content.Context
+import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: SchemeAdapter
     private lateinit var btnImport: Button
-    private lateinit var btnTestNotification: Button  // ← добавил
+    private lateinit var btnTestNotification: Button
+    private lateinit var btnAddScheme: Button  // ← добавили
     private lateinit var tvEmpty: TextView
     private lateinit var repository: SchemeRepository
 
@@ -32,15 +40,16 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.rvSchemes)
         btnImport = findViewById(R.id.btnImport)
-        btnTestNotification = findViewById(R.id.btnTestNotification)  // ← добавил
+        btnTestNotification = findViewById(R.id.btnTestNotification)
+        btnAddScheme = findViewById(R.id.btnAddScheme)  // ← добавили
         tvEmpty = findViewById(R.id.tvEmpty)
 
         val database = SchemeDatabase.getInstance(this)
         repository = SchemeRepository(database.schemeDao())
 
         adapter = SchemeAdapter(emptyList()) { scheme ->
-            val intent = Intent(this, DetailActivity::class.java)
-            intent.putExtra("scheme", scheme)
+            val intent = Intent(this, EditSchemeActivity::class.java)
+            intent.putExtra("scheme_id", scheme.id)
             startActivity(intent)
         }
 
@@ -59,17 +68,52 @@ class MainActivity : AppCompatActivity() {
             WorkManager.getInstance(this).enqueue(workRequest)
         }
 
+        btnAddScheme.setOnClickListener {
+            val intent = Intent(this, EditSchemeActivity::class.java)
+            startActivity(intent)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    1001
+                )
+            }
+        }
+
         setupNotifications()
+
+        // Запускаем проверку при первом запуске (опционально)
+        if (isFirstRun()) {
+            val immediateWork = OneTimeWorkRequestBuilder<NotificationWorker>()
+                .build()
+            WorkManager.getInstance(this).enqueue(immediateWork)
+        }
     }
 
     private fun setupNotifications() {
+        val startTime = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 9)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            if (timeInMillis <= System.currentTimeMillis()) {
+                add(Calendar.DAY_OF_YEAR, 1)
+            }
+        }
+
+        val initialDelay = startTime.timeInMillis - System.currentTimeMillis()
+
         val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(
             1, TimeUnit.DAYS
-        ).build()
+        ).setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+            .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "schemes_notification",
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.REPLACE,
             workRequest
         )
     }
@@ -86,6 +130,15 @@ class MainActivity : AppCompatActivity() {
                 adapter.updateData(schemes)
             }
         }
+    }
+
+    private fun isFirstRun(): Boolean {
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val isFirst = prefs.getBoolean("is_first_run", true)
+        if (isFirst) {
+            prefs.edit().putBoolean("is_first_run", false).apply()
+        }
+        return isFirst
     }
 
     private fun importSchemes() {

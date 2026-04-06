@@ -7,9 +7,8 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.myschemes.R
 import com.example.myschemes.data.database.SchemeDatabase
-import com.example.myschemes.data.model.Scheme
+import com.example.myschemes.data.model.Scheme  // ← добавить импорт
 import com.example.myschemes.data.model.SchemeStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -28,7 +27,7 @@ class NotificationWorker(
                 val schemes = database.schemeDao().getAllSchemes()
 
                 val expiring = schemes.filter { it.getStatus() == SchemeStatus.EXPIRING }
-                val expired = schemes.filter { it.getStatus() == SchemeStatus.EXPIRED }  // ← исправлено!
+                val expired = schemes.filter { it.getStatus() == SchemeStatus.EXPIRED }
 
                 if (expiring.isNotEmpty() || expired.isNotEmpty()) {
                     showNotification(expiring, expired)
@@ -59,7 +58,7 @@ class NotificationWorker(
         val message = buildString {
             if (expired.isNotEmpty()) {
                 appendLine("🔴 Просрочено: ${expired.size}")
-                expired.take(3).forEach { scheme ->
+                expired.take(3).forEach { scheme: Scheme ->  // ← явно указали тип
                     appendLine("  • ${scheme.equipmentName}")
                 }
                 if (expired.size > 3) appendLine("  ... и ещё ${expired.size - 3}")
@@ -67,7 +66,7 @@ class NotificationWorker(
             if (expiring.isNotEmpty()) {
                 if (expired.isNotEmpty()) appendLine()
                 appendLine("🟡 Скоро истекают: ${expiring.size}")
-                expiring.take(3).forEach { scheme ->
+                expiring.take(3).forEach { scheme: Scheme ->  // ← явно указали тип
                     val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
                     appendLine("  • ${scheme.equipmentName} (до ${dateFormat.format(Date(scheme.nextRevisionDate))})")
                 }
