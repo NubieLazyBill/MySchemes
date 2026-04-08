@@ -48,8 +48,8 @@ class MainActivity : AppCompatActivity() {
         repository = SchemeRepository(database.schemeDao())
 
         adapter = SchemeAdapter(emptyList()) { scheme ->
-            val intent = Intent(this, EditSchemeActivity::class.java)
-            intent.putExtra("scheme_id", scheme.id)
+            val intent = Intent(this, DetailActivity::class.java)  // ← было EditSchemeActivity, стало DetailActivity
+            intent.putExtra("scheme", scheme)
             startActivity(intent)
         }
 
@@ -124,10 +124,12 @@ class MainActivity : AppCompatActivity() {
             if (schemes.isEmpty()) {
                 recyclerView.visibility = android.view.View.GONE
                 tvEmpty.visibility = android.view.View.VISIBLE
+                findViewById<TextView>(R.id.tvCounter).text = "Всего схем: 0"
             } else {
                 recyclerView.visibility = android.view.View.VISIBLE
                 tvEmpty.visibility = android.view.View.GONE
                 adapter.updateData(schemes)
+                findViewById<TextView>(R.id.tvCounter).text = "Всего схем: ${schemes.size}"
             }
         }
     }

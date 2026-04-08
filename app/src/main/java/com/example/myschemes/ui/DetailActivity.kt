@@ -1,5 +1,6 @@
 package com.example.myschemes.ui
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.widget.Button
@@ -19,13 +20,14 @@ class DetailActivity : AppCompatActivity() {
     private lateinit var tvLastRevisionDate: TextView
     private lateinit var tvNextRevisionDate: TextView
     private lateinit var tvStatus: TextView
-    private lateinit var btnBack: Button
+    private lateinit var btnBack: Button          // ← Button
+    private lateinit var btnInspection: Button
+    private var scheme: Scheme? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
 
-        // Инициализация View
         tvEquipmentName = findViewById(R.id.tvEquipmentName)
         tvItemNumber = findViewById(R.id.tvItemNumber)
         tvCellNumber = findViewById(R.id.tvCellNumber)
@@ -34,12 +36,13 @@ class DetailActivity : AppCompatActivity() {
         tvNextRevisionDate = findViewById(R.id.tvNextRevisionDate)
         tvStatus = findViewById(R.id.tvStatus)
         btnBack = findViewById(R.id.btnBack)
+        btnInspection = findViewById(R.id.btnInspection)
 
-        // Получаем данные из Intent
-        val scheme = intent.getSerializableExtra("scheme") as? Scheme
+        scheme = intent.getSerializableExtra("scheme") as? Scheme
 
-        if (scheme != null) {
-            displayScheme(scheme)
+        scheme?.let {
+            displayScheme(it)
+            setupInspectionButton()
         }
 
         btnBack.setOnClickListener {
@@ -60,6 +63,14 @@ class DetailActivity : AppCompatActivity() {
         val (statusText, statusColor) = getStatusInfo(scheme.nextRevisionDate)
         tvStatus.text = statusText
         tvStatus.setTextColor(statusColor)
+    }
+
+    private fun setupInspectionButton() {
+        btnInspection.setOnClickListener {
+            val intent = Intent(this, InspectionActivity::class.java)
+            intent.putExtra("scheme_id", scheme?.id ?: 0)
+            startActivity(intent)
+        }
     }
 
     private fun getStatusInfo(nextRevisionDate: Long): Pair<String, Int> {

@@ -13,7 +13,24 @@ data class Scheme(
     val equipmentName: String,
     val lastRevisionDate: Long,
     val nextRevisionDate: Long,
-    val schemeNumber: String? = null
+    val schemeNumber: String? = null,
+
+    // Новые поля для чек-листа шкафа
+    val cabinetName: String? = null,           // дисп.наим. Шкафа
+    val lockIntegrity: Boolean = false,        // Целостность замков
+    val sealIntegrity: Boolean = false,        // Уплотнение шкафа
+    val cableEntries: Boolean = false,         // Заходы кабелей в защите
+    val switchesName: String? = null,          // дисп.наим.автоматов, рубильников
+    val noBareWires: Boolean = false,          // Не подкл. оголенные жилы
+    val addressLabels: Boolean = false,        // Наличие адресных бирок
+    val terminalsIntegrity: Boolean = false,   // Целостность клеммников
+    val painting: Boolean = false,             // окраска
+    val inventoryNumber: String? = null,       // Инвентарный номер
+    val heating: Boolean = false,              // Обогрев
+    val grounding: Boolean = false,            // Заземление
+
+    // Фото
+    val photoPath: String? = null              // путь к сохранённому фото
 ) : Serializable {
 
     fun getStatus(): SchemeStatus {
