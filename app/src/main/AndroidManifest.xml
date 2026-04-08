@@ -25,6 +25,7 @@
         <activity android:name=".ui.DetailActivity" />
         <activity android:name=".ui.EditSchemeActivity" />
         <activity android:name=".ui.InspectionActivity" />
+        <activity android:name=".ui.CabinetDetailActivity" />
     </application>
 
 </manifest>

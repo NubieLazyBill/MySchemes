@@ -22,6 +22,7 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.content.Context
+import android.widget.Toast
 import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
@@ -48,9 +49,14 @@ class MainActivity : AppCompatActivity() {
         repository = SchemeRepository(database.schemeDao())
 
         adapter = SchemeAdapter(emptyList()) { scheme ->
-            val intent = Intent(this, DetailActivity::class.java)  // ← было EditSchemeActivity, стало DetailActivity
-            intent.putExtra("scheme", scheme)
+            val intent = Intent(this, CabinetDetailActivity::class.java)
+            intent.putExtra("scheme_id", scheme.id)
             startActivity(intent)
+        }
+
+        btnAddScheme.setOnClickListener {
+            // TODO: создание новой схемы
+            Toast.makeText(this, "Добавление схемы в разработке", Toast.LENGTH_SHORT).show()
         }
 
         recyclerView.layoutManager = LinearLayoutManager(this)
