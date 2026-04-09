@@ -22,7 +22,7 @@
             android:textColor="#2C3E50"
             android:paddingBottom="8dp" />
 
-        <!-- Оборудование (основная информация) -->
+        <!-- Основная информация о схеме (только для чтения) -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -57,24 +57,6 @@
                         android:textStyle="bold" />
                     <TextView
                         android:id="@+id/tvCellNumber"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="2" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="4dp">
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Номер схемы:"
-                        android:textStyle="bold" />
-                    <TextView
-                        android:id="@+id/tvSchemeNumber"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="2" />
@@ -138,30 +120,65 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Наименование шкафа -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:hint="Диспетчерское наименование шкафа">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etCabinetName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text" />
-        </com.google.android.material.textfield.TextInputLayout>
-
+        <!-- Редактируемые поля -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Состояние шкафа"
+            android:text="✏️ Редактирование"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp" />
 
-        <!-- Чек-лист -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:hint="Номер схемы">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etSchemeNumber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:hint="Дата схемы (ДД.ММ.ГГГГ)">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etLastRevisionDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="date" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:hint="Дата следующего пересмотра (ДД.ММ.ГГГГ)">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etNextRevisionDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="date" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Чек-лист проверки -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="✅ Чек-лист проверки"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp" />
+
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -174,6 +191,33 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="12dp">
+
+                <CheckBox
+                    android:id="@+id/cbCabinetNameChecked"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="📛 Диспетчерское наименование (заполнено)"
+                    android:padding="8dp" />
+
+                <CheckBox
+                    android:id="@+id/cbSwitchesNameChecked"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🔌 ДН автоматов, рубильников (заполнено)"
+                    android:padding="8dp" />
+
+                <CheckBox
+                    android:id="@+id/cbInventoryNumberChecked"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🔢 Инвентарный номер (заполнен)"
+                    android:padding="8dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginVertical="8dp" />
 
                 <CheckBox
                     android:id="@+id/cbLockIntegrity"
@@ -241,35 +285,6 @@
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
-
-        <!-- Автоматы/рубильники -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:hint="Автоматы, рубильники">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etSwitchesName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textMultiLine"
-                android:maxLines="3" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Инвентарный номер -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:hint="Инвентарный номер">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etInventoryNumber"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text" />
-        </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Фото -->
         <TextView

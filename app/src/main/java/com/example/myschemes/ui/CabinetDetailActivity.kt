@@ -19,7 +19,6 @@ import androidx.lifecycle.lifecycleScope
 import com.example.myschemes.R
 import com.example.myschemes.data.database.SchemeDatabase
 import com.example.myschemes.data.model.Scheme
-import com.example.myschemes.data.model.SchemeStatus
 import com.example.myschemes.data.repository.SchemeRepository
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -30,21 +29,23 @@ import java.util.*
 
 class CabinetDetailActivity : AppCompatActivity() {
 
-    // Основные поля
+    // Заголовок и информация
     private lateinit var tvTitle: TextView
     private lateinit var tvEquipmentName: TextView
     private lateinit var tvCellNumber: TextView
-    private lateinit var tvSchemeNumber: TextView
     private lateinit var tvLastRevisionDate: TextView
     private lateinit var tvNextRevisionDate: TextView
     private lateinit var tvStatus: TextView
 
-    // Поля для редактирования
-    private lateinit var etCabinetName: TextInputEditText
-    private lateinit var etSwitchesName: TextInputEditText
-    private lateinit var etInventoryNumber: TextInputEditText
+    // Редактируемые поля
+    private lateinit var etSchemeNumber: TextInputEditText
+    private lateinit var etLastRevisionDate: TextInputEditText
+    private lateinit var etNextRevisionDate: TextInputEditText
 
     // Чек-боксы
+    private lateinit var cbCabinetNameChecked: CheckBox
+    private lateinit var cbSwitchesNameChecked: CheckBox
+    private lateinit var cbInventoryNumberChecked: CheckBox
     private lateinit var cbLockIntegrity: CheckBox
     private lateinit var cbSealIntegrity: CheckBox
     private lateinit var cbCableEntries: CheckBox
@@ -99,15 +100,17 @@ class CabinetDetailActivity : AppCompatActivity() {
         tvTitle = findViewById(R.id.tvTitle)
         tvEquipmentName = findViewById(R.id.tvEquipmentName)
         tvCellNumber = findViewById(R.id.tvCellNumber)
-        tvSchemeNumber = findViewById(R.id.tvSchemeNumber)
         tvLastRevisionDate = findViewById(R.id.tvLastRevisionDate)
         tvNextRevisionDate = findViewById(R.id.tvNextRevisionDate)
         tvStatus = findViewById(R.id.tvStatus)
 
-        etCabinetName = findViewById(R.id.etCabinetName)
-        etSwitchesName = findViewById(R.id.etSwitchesName)
-        etInventoryNumber = findViewById(R.id.etInventoryNumber)
+        etSchemeNumber = findViewById(R.id.etSchemeNumber)
+        etLastRevisionDate = findViewById(R.id.etLastRevisionDate)
+        etNextRevisionDate = findViewById(R.id.etNextRevisionDate)
 
+        cbCabinetNameChecked = findViewById(R.id.cbCabinetNameChecked)
+        cbSwitchesNameChecked = findViewById(R.id.cbSwitchesNameChecked)
+        cbInventoryNumberChecked = findViewById(R.id.cbInventoryNumberChecked)
         cbLockIntegrity = findViewById(R.id.cbLockIntegrity)
         cbSealIntegrity = findViewById(R.id.cbSealIntegrity)
         cbCableEntries = findViewById(R.id.cbCableEntries)
@@ -134,7 +137,7 @@ class CabinetDetailActivity : AppCompatActivity() {
 
             scheme?.let { s ->
                 displayBasicInfo(s)
-                displayInspectionData(s)
+                displayCheckboxes(s)
                 currentPhotoPath = s.photoPath
                 if (!currentPhotoPath.isNullOrEmpty()) {
                     loadPhotoPreview()
@@ -149,19 +152,26 @@ class CabinetDetailActivity : AppCompatActivity() {
         tvTitle.text = "📋 ${scheme.equipmentName}"
         tvEquipmentName.text = scheme.equipmentName
         tvCellNumber.text = scheme.cellNumber ?: "—"
-        tvSchemeNumber.text = scheme.schemeNumber ?: "—"
-        tvLastRevisionDate.text = dateFormat.format(Date(scheme.lastRevisionDate))
-        tvNextRevisionDate.text = dateFormat.format(Date(scheme.nextRevisionDate))
+
+        val lastDate = dateFormat.format(Date(scheme.lastRevisionDate))
+        tvLastRevisionDate.text = lastDate
+        etLastRevisionDate.setText(lastDate)
+
+        val nextDate = dateFormat.format(Date(scheme.nextRevisionDate))
+        tvNextRevisionDate.text = nextDate
+        etNextRevisionDate.setText(nextDate)
+
+        etSchemeNumber.setText(scheme.schemeNumber ?: "")
 
         val (statusText, statusColor) = getStatusInfo(scheme.nextRevisionDate)
         tvStatus.text = statusText
         tvStatus.setTextColor(statusColor)
     }
 
-    private fun displayInspectionData(scheme: Scheme) {
-        etCabinetName.setText(scheme.cabinetName ?: "")
-        etSwitchesName.setText(scheme.switchesName ?: "")
-        etInventoryNumber.setText(scheme.inventoryNumber ?: "")
+    private fun displayCheckboxes(scheme: Scheme) {
+        cbCabinetNameChecked.isChecked = !scheme.cabinetName.isNullOrEmpty()
+        cbSwitchesNameChecked.isChecked = !scheme.switchesName.isNullOrEmpty()
+        cbInventoryNumberChecked.isChecked = !scheme.inventoryNumber.isNullOrEmpty()
 
         cbLockIntegrity.isChecked = scheme.lockIntegrity
         cbSealIntegrity.isChecked = scheme.sealIntegrity
@@ -215,7 +225,7 @@ class CabinetDetailActivity : AppCompatActivity() {
 
     private fun createImageFile(): File? {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val storageDir = getExternalFilesDir("photos")
+        val storageDir = getExternalFilesDir(null)
         return File.createTempFile(
             "JPEG_${timeStamp}_",
             ".jpg",
@@ -260,17 +270,31 @@ class CabinetDetailActivity : AppCompatActivity() {
 
     private fun saveScheme() {
         scheme?.let { s ->
+            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+
+            val schemeNumber = etSchemeNumber.text.toString().takeIf { it.isNotEmpty() }
+            val lastRevisionDateStr = etLastRevisionDate.text.toString()
+            val nextRevisionDateStr = etNextRevisionDate.text.toString()
+
+            val lastRevisionDate = try {
+                dateFormat.parse(lastRevisionDateStr)?.time ?: s.lastRevisionDate
+            } catch (e: Exception) { s.lastRevisionDate }
+
+            val nextRevisionDate = try {
+                dateFormat.parse(nextRevisionDateStr)?.time ?: s.nextRevisionDate
+            } catch (e: Exception) { s.nextRevisionDate }
+
             val updatedScheme = s.copy(
-                cabinetName = etCabinetName.text.toString().takeIf { it.isNotEmpty() },
+                schemeNumber = schemeNumber,
+                lastRevisionDate = lastRevisionDate,
+                nextRevisionDate = nextRevisionDate,
                 lockIntegrity = cbLockIntegrity.isChecked,
                 sealIntegrity = cbSealIntegrity.isChecked,
                 cableEntries = cbCableEntries.isChecked,
-                switchesName = etSwitchesName.text.toString().takeIf { it.isNotEmpty() },
                 noBareWires = cbNoBareWires.isChecked,
                 addressLabels = cbAddressLabels.isChecked,
                 terminalsIntegrity = cbTerminalsIntegrity.isChecked,
                 painting = cbPainting.isChecked,
-                inventoryNumber = etInventoryNumber.text.toString().takeIf { it.isNotEmpty() },
                 heating = cbHeating.isChecked,
                 grounding = cbGrounding.isChecked,
                 photoPath = currentPhotoPath
@@ -283,7 +307,7 @@ class CabinetDetailActivity : AppCompatActivity() {
                     allSchemes[index] = updatedScheme
                     repository.saveSchemes(allSchemes)
                     Toast.makeText(this@CabinetDetailActivity, "Данные сохранены", Toast.LENGTH_SHORT).show()
-                    loadSchemeData() // обновляем отображение
+                    loadSchemeData()
                 }
             }
         }
