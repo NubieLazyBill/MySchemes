@@ -15,22 +15,36 @@ data class Scheme(
     val nextRevisionDate: Long,
     val schemeNumber: String? = null,
 
-    // Новые поля для чек-листа шкафа
-    val cabinetName: String? = null,           // дисп.наим. Шкафа
-    val lockIntegrity: Boolean = false,        // Целостность замков
-    val sealIntegrity: Boolean = false,        // Уплотнение шкафа
-    val cableEntries: Boolean = false,         // Заходы кабелей в защите
-    val switchesName: String? = null,          // дисп.наим.автоматов, рубильников
-    val noBareWires: Boolean = false,          // Не подкл. оголенные жилы
-    val addressLabels: Boolean = false,        // Наличие адресных бирок
-    val terminalsIntegrity: Boolean = false,   // Целостность клеммников
-    val painting: Boolean = false,             // окраска
-    val inventoryNumber: String? = null,       // Инвентарный номер
-    val heating: Boolean = false,              // Обогрев
-    val grounding: Boolean = false,            // Заземление
+    // Чек-лист
+    val cabinetNameChecked: Boolean = false,
+    val switchesNameChecked: Boolean = false,
+    val inventoryNumberChecked: Boolean = false,
+    val lockIntegrity: Boolean = false,
+    val sealIntegrity: Boolean = false,
+    val cableEntries: Boolean = false,
+    val noBareWires: Boolean = false,
+    val addressLabels: Boolean = false,
+    val terminalsIntegrity: Boolean = false,
+    val painting: Boolean = false,
+    val heating: Boolean = false,
+    val grounding: Boolean = false,
 
-    // Фото
-    val photoPath: String? = null              // путь к сохранённому фото
+    // Фото для каждого пункта
+    val cabinetNamePhoto: String? = null,
+    val switchesNamePhoto: String? = null,
+    val inventoryNumberPhoto: String? = null,
+    val lockIntegrityPhoto: String? = null,
+    val sealIntegrityPhoto: String? = null,
+    val cableEntriesPhoto: String? = null,
+    val noBareWiresPhoto: String? = null,
+    val addressLabelsPhoto: String? = null,
+    val terminalsIntegrityPhoto: String? = null,
+    val paintingPhoto: String? = null,
+    val heatingPhoto: String? = null,
+    val groundingPhoto: String? = null,
+
+    // Общее фото шкафа
+    val generalPhoto: String? = null
 ) : Serializable {
 
     fun getStatus(): SchemeStatus {

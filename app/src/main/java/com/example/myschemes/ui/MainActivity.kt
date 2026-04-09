@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: SchemeAdapter
     private lateinit var btnImport: Button
     private lateinit var btnTestNotification: Button
-    private lateinit var btnAddScheme: Button  // ← добавили
+    private lateinit var btnAddScheme: Button
     private lateinit var tvEmpty: TextView
     private lateinit var repository: SchemeRepository
 
@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.rvSchemes)
         btnImport = findViewById(R.id.btnImport)
         btnTestNotification = findViewById(R.id.btnTestNotification)
-        btnAddScheme = findViewById(R.id.btnAddScheme)  // ← добавили
+        btnAddScheme = findViewById(R.id.btnAddScheme)
         tvEmpty = findViewById(R.id.tvEmpty)
 
         val database = SchemeDatabase.getInstance(this)
@@ -52,11 +52,6 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, CabinetDetailActivity::class.java)
             intent.putExtra("scheme_id", scheme.id)
             startActivity(intent)
-        }
-
-        btnAddScheme.setOnClickListener {
-            // TODO: создание новой схемы
-            Toast.makeText(this, "Добавление схемы в разработке", Toast.LENGTH_SHORT).show()
         }
 
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -75,8 +70,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnAddScheme.setOnClickListener {
-            val intent = Intent(this, EditSchemeActivity::class.java)
-            startActivity(intent)
+            // TODO: создание новой схемы
+            Toast.makeText(this, "Добавление схемы в разработке", Toast.LENGTH_SHORT).show()
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -92,7 +87,6 @@ class MainActivity : AppCompatActivity() {
 
         setupNotifications()
 
-        // Запускаем проверку при первом запуске (опционально)
         if (isFirstRun()) {
             val immediateWork = OneTimeWorkRequestBuilder<NotificationWorker>()
                 .build()
