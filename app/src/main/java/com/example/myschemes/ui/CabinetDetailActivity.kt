@@ -20,7 +20,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompatActivity
+class CabinetDetailActivity : AppCompatActivity() {
 
     // Заголовок и информация
     private lateinit var tvTitle: TextView
@@ -62,6 +62,20 @@ class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompat
     private lateinit var btnPaintingPhoto: ImageButton
     private lateinit var btnHeatingPhoto: ImageButton
     private lateinit var btnGroundingPhoto: ImageButton
+
+    // Превью фото
+    private lateinit var ivCabinetNamePreview: ImageView
+    private lateinit var ivSwitchesNamePreview: ImageView
+    private lateinit var ivInventoryNumberPreview: ImageView
+    private lateinit var ivLockIntegrityPreview: ImageView
+    private lateinit var ivSealIntegrityPreview: ImageView
+    private lateinit var ivCableEntriesPreview: ImageView
+    private lateinit var ivNoBareWiresPreview: ImageView
+    private lateinit var ivAddressLabelsPreview: ImageView
+    private lateinit var ivTerminalsIntegrityPreview: ImageView
+    private lateinit var ivPaintingPreview: ImageView
+    private lateinit var ivHeatingPreview: ImageView
+    private lateinit var ivGroundingPreview: ImageView
 
     // Общее фото
     private lateinit var btnTakeGeneralPhoto: Button
@@ -126,6 +140,7 @@ class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompat
         cbHeating = findViewById(R.id.cbHeating)
         cbGrounding = findViewById(R.id.cbGrounding)
 
+        // Кнопки фото
         btnCabinetNamePhoto = findViewById(R.id.btnCabinetNamePhoto)
         btnSwitchesNamePhoto = findViewById(R.id.btnSwitchesNamePhoto)
         btnInventoryNumberPhoto = findViewById(R.id.btnInventoryNumberPhoto)
@@ -138,6 +153,20 @@ class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompat
         btnPaintingPhoto = findViewById(R.id.btnPaintingPhoto)
         btnHeatingPhoto = findViewById(R.id.btnHeatingPhoto)
         btnGroundingPhoto = findViewById(R.id.btnGroundingPhoto)
+
+        // Превью
+        ivCabinetNamePreview = findViewById(R.id.ivCabinetNamePreview)
+        ivSwitchesNamePreview = findViewById(R.id.ivSwitchesNamePreview)
+        ivInventoryNumberPreview = findViewById(R.id.ivInventoryNumberPreview)
+        ivLockIntegrityPreview = findViewById(R.id.ivLockIntegrityPreview)
+        ivSealIntegrityPreview = findViewById(R.id.ivSealIntegrityPreview)
+        ivCableEntriesPreview = findViewById(R.id.ivCableEntriesPreview)
+        ivNoBareWiresPreview = findViewById(R.id.ivNoBareWiresPreview)
+        ivAddressLabelsPreview = findViewById(R.id.ivAddressLabelsPreview)
+        ivTerminalsIntegrityPreview = findViewById(R.id.ivTerminalsIntegrityPreview)
+        ivPaintingPreview = findViewById(R.id.ivPaintingPreview)
+        ivHeatingPreview = findViewById(R.id.ivHeatingPreview)
+        ivGroundingPreview = findViewById(R.id.ivGroundingPreview)
 
         btnTakeGeneralPhoto = findViewById(R.id.btnTakeGeneralPhoto)
         btnViewGeneralPhoto = findViewById(R.id.btnViewGeneralPhoto)
@@ -180,7 +209,7 @@ class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompat
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
-        permissions: Array<String>,  // ← changed to Array<String>
+        permissions: Array<String>,
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -189,10 +218,71 @@ class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompat
 
     private fun onPhotoTaken(key: String, path: String) {
         photoPaths[key] = path
-        if (key == "general") {
-            loadImagePreview(ivGeneralPhotoPreview, path)
+        when (key) {
+            "cabinetName" -> loadPreview(ivCabinetNamePreview, path)
+            "switchesName" -> loadPreview(ivSwitchesNamePreview, path)
+            "inventoryNumber" -> loadPreview(ivInventoryNumberPreview, path)
+            "lockIntegrity" -> loadPreview(ivLockIntegrityPreview, path)
+            "sealIntegrity" -> loadPreview(ivSealIntegrityPreview, path)
+            "cableEntries" -> loadPreview(ivCableEntriesPreview, path)
+            "noBareWires" -> loadPreview(ivNoBareWiresPreview, path)
+            "addressLabels" -> loadPreview(ivAddressLabelsPreview, path)
+            "terminalsIntegrity" -> loadPreview(ivTerminalsIntegrityPreview, path)
+            "painting" -> loadPreview(ivPaintingPreview, path)
+            "heating" -> loadPreview(ivHeatingPreview, path)
+            "grounding" -> loadPreview(ivGroundingPreview, path)
+            "general" -> loadImagePreview(ivGeneralPhotoPreview, path)
         }
         Toast.makeText(this, "Фото добавлено", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun loadPreview(imageView: ImageView, path: String?) {
+        if (path.isNullOrEmpty()) {
+            imageView.visibility = ImageView.GONE
+            return
+        }
+        val file = if (path.startsWith("content://")) {
+            imageView.visibility = ImageView.GONE
+            return
+        } else {
+            File(path)
+        }
+        if (file.exists()) {
+            val bitmap = BitmapFactory.decodeFile(path)
+            imageView.setImageBitmap(bitmap)
+            imageView.visibility = ImageView.VISIBLE
+            // Добавляем клик для увеличенного просмотра
+            imageView.setOnClickListener {
+                showFullScreenImage(path)
+            }
+        } else {
+            imageView.visibility = ImageView.GONE
+        }
+    }
+
+    private fun loadImagePreview(imageView: ImageView, path: String?) {
+        if (path.isNullOrEmpty()) {
+            imageView.setImageResource(android.R.drawable.ic_menu_camera)
+            imageView.setOnClickListener(null)
+            return
+        }
+        val file = if (path.startsWith("content://")) {
+            imageView.setImageResource(android.R.drawable.ic_menu_camera)
+            return
+        } else {
+            File(path)
+        }
+        if (file.exists()) {
+            val bitmap = BitmapFactory.decodeFile(path)
+            imageView.setImageBitmap(bitmap)
+            // Добавляем клик для общего фото
+            imageView.setOnClickListener {
+                showFullScreenImage(path)
+            }
+        } else {
+            imageView.setImageResource(android.R.drawable.ic_menu_camera)
+            imageView.setOnClickListener(null)
+        }
     }
 
     private fun viewPhoto(path: String?) {
@@ -213,18 +303,6 @@ class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompat
         intent.setDataAndType(uri, "image/*")
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         startActivity(intent)
-    }
-
-    private fun loadImagePreview(imageView: ImageView, path: String) {
-        val file = if (path.startsWith("content://")) {
-            return
-        } else {
-            File(path)
-        }
-        if (file.exists()) {
-            val bitmap = BitmapFactory.decodeFile(path)
-            imageView.setImageBitmap(bitmap)
-        }
     }
 
     private fun loadSchemeData() {
@@ -278,6 +356,7 @@ class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompat
     }
 
     private fun loadPhotos(scheme: Scheme) {
+        // Сохраняем пути
         photoPaths["cabinetName"] = scheme.cabinetNamePhoto
         photoPaths["switchesName"] = scheme.switchesNamePhoto
         photoPaths["inventoryNumber"] = scheme.inventoryNumberPhoto
@@ -292,7 +371,20 @@ class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompat
         photoPaths["grounding"] = scheme.groundingPhoto
         photoPaths["general"] = scheme.generalPhoto
 
-        scheme.generalPhoto?.let { loadImagePreview(ivGeneralPhotoPreview, it) }
+        // Загружаем превью
+        loadPreview(ivCabinetNamePreview, scheme.cabinetNamePhoto)
+        loadPreview(ivSwitchesNamePreview, scheme.switchesNamePhoto)
+        loadPreview(ivInventoryNumberPreview, scheme.inventoryNumberPhoto)
+        loadPreview(ivLockIntegrityPreview, scheme.lockIntegrityPhoto)
+        loadPreview(ivSealIntegrityPreview, scheme.sealIntegrityPhoto)
+        loadPreview(ivCableEntriesPreview, scheme.cableEntriesPhoto)
+        loadPreview(ivNoBareWiresPreview, scheme.noBareWiresPhoto)
+        loadPreview(ivAddressLabelsPreview, scheme.addressLabelsPhoto)
+        loadPreview(ivTerminalsIntegrityPreview, scheme.terminalsIntegrityPhoto)
+        loadPreview(ivPaintingPreview, scheme.paintingPhoto)
+        loadPreview(ivHeatingPreview, scheme.heatingPhoto)
+        loadPreview(ivGroundingPreview, scheme.groundingPhoto)
+        loadImagePreview(ivGeneralPhotoPreview, scheme.generalPhoto)
     }
 
     private fun getStatusInfo(nextRevisionDate: Long): Pair<String, Int> {
@@ -359,6 +451,7 @@ class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompat
                     allSchemes[index] = updatedScheme
                     repository.saveSchemes(allSchemes)
                     Toast.makeText(this@CabinetDetailActivity, "Данные сохранены", Toast.LENGTH_SHORT).show()
+                    loadPhotos(updatedScheme)
                 }
             }
         }
@@ -387,6 +480,23 @@ class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompat
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        photoHelper.handleActivityResult(requestCode, resultCode, data)  // ← добавить
+        photoHelper.handleActivityResult(requestCode, resultCode, data)
+    }
+
+    private fun showFullScreenImage(path: String) {
+        val imageView = ImageView(this)
+        val bitmap = BitmapFactory.decodeFile(path)
+        if (bitmap == null) {
+            Toast.makeText(this, "Не удалось загрузить фото", Toast.LENGTH_SHORT).show()
+            return
+        }
+        imageView.setImageBitmap(bitmap)
+        imageView.scaleType = ImageView.ScaleType.FIT_CENTER
+
+        AlertDialog.Builder(this)
+            .setTitle("Фото дефекта")
+            .setView(imageView)
+            .setPositiveButton("Закрыть") { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 }

@@ -192,7 +192,7 @@
                 android:orientation="vertical"
                 android:padding="12dp">
 
-                <!-- Диспетчерское наименование -->
+                <!-- 1. Диспетчерское наименование -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -209,14 +209,22 @@
 
                     <ImageButton
                         android:id="@+id/btnCabinetNamePhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivCabinetNamePreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- ДН автоматов, рубильников -->
+                <!-- 2. ДН автоматов, рубильников -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -233,14 +241,22 @@
 
                     <ImageButton
                         android:id="@+id/btnSwitchesNamePhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivSwitchesNamePreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Инвентарный номер -->
+                <!-- 3. Инвентарный номер -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -257,11 +273,19 @@
 
                     <ImageButton
                         android:id="@+id/btnInventoryNumberPhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivInventoryNumberPreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
                 <View
@@ -270,7 +294,7 @@
                     android:background="#E0E0E0"
                     android:layout_marginVertical="8dp" />
 
-                <!-- Целостность замков -->
+                <!-- 4. Целостность замков -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -287,14 +311,22 @@
 
                     <ImageButton
                         android:id="@+id/btnLockIntegrityPhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivLockIntegrityPreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Уплотнение шкафа -->
+                <!-- 5. Уплотнение шкафа -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -311,14 +343,22 @@
 
                     <ImageButton
                         android:id="@+id/btnSealIntegrityPhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivSealIntegrityPreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Заходы кабелей -->
+                <!-- 6. Заходы кабелей -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -335,14 +375,22 @@
 
                     <ImageButton
                         android:id="@+id/btnCableEntriesPhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivCableEntriesPreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Нет оголённых жил -->
+                <!-- 7. Нет оголённых жил -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -359,14 +407,22 @@
 
                     <ImageButton
                         android:id="@+id/btnNoBareWiresPhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivNoBareWiresPreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Адресные бирки -->
+                <!-- 8. Адресные бирки -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -383,14 +439,22 @@
 
                     <ImageButton
                         android:id="@+id/btnAddressLabelsPhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivAddressLabelsPreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Клеммники -->
+                <!-- 9. Целостность клеммников -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -407,14 +471,22 @@
 
                     <ImageButton
                         android:id="@+id/btnTerminalsIntegrityPhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivTerminalsIntegrityPreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Окраска -->
+                <!-- 10. Окраска -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -431,14 +503,22 @@
 
                     <ImageButton
                         android:id="@+id/btnPaintingPhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivPaintingPreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Обогрев -->
+                <!-- 11. Обогрев -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -455,14 +535,22 @@
 
                     <ImageButton
                         android:id="@+id/btnHeatingPhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivHeatingPreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Заземление -->
+                <!-- 12. Заземление -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -479,11 +567,19 @@
 
                     <ImageButton
                         android:id="@+id/btnGroundingPhoto"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="8dp" />
+                        android:padding="4dp" />
+
+                    <ImageView
+                        android:id="@+id/ivGroundingPreview"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -512,7 +608,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:text="📷 Сделать фото" />
+                android:text="📷 Фото" />
 
             <Button
                 android:id="@+id/btnViewGeneralPhoto"
