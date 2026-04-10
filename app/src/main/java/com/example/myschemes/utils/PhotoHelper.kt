@@ -7,39 +7,24 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.fragment.app.FragmentActivity
+import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-class PhotoHelper(private val activity: FragmentActivity) {
+class PhotoHelper(private val activity: AppCompatActivity) {
 
     companion object {
         private const val REQUEST_CAMERA_PERMISSION = 100
         private const val REQUEST_IMAGE_CAPTURE = 101
+        private const val REQUEST_GALLERY = 102
     }
 
     private var currentPhotoPath: String? = null
     private var currentCallback: ((String) -> Unit)? = null
-
-    // Регистрируем ланчер для выбора фото из галереи (без разрешений!)
-    private lateinit var galleryLauncher: ActivityResultLauncher<String>
-
-    init {
-        galleryLauncher = activity.registerForActivityResult(
-            ActivityResultContracts.GetContent()
-        ) { uri: Uri? ->
-            uri?.let {
-                currentCallback?.invoke(it.toString())
-            }
-            currentCallback = null
-        }
-    }
 
     fun takePhoto(onPhotoTaken: (String) -> Unit) {
         currentCallback = onPhotoTaken
@@ -74,7 +59,8 @@ class PhotoHelper(private val activity: FragmentActivity) {
 
     fun pickFromGallery(onPhotoSelected: (String) -> Unit) {
         currentCallback = onPhotoSelected
-        galleryLauncher.launch("image/*")
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        activity.startActivityForResult(intent, REQUEST_GALLERY)
     }
 
     private fun createImageFile(): File? {
@@ -90,11 +76,30 @@ class PhotoHelper(private val activity: FragmentActivity) {
     }
 
     fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
-            currentPhotoPath?.let {
-                currentCallback?.invoke(it)
+        if (resultCode == Activity.RESULT_OK) {
+            when (requestCode) {
+                REQUEST_IMAGE_CAPTURE -> {
+                    currentPhotoPath?.let {
+                        currentCallback?.invoke(it)
+                    }
+                }
+                REQUEST_GALLERY -> {
+                    data?.data?.let { uri ->
+                        currentCallback?.invoke(uri.toString())
+                    }
+                }
             }
-            currentCallback = null
+        }
+        currentCallback = null
+    }
+
+    fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                currentCallback?.let { takePhoto(it) }
+            } else {
+                currentCallback = null
+            }
         }
     }
 }

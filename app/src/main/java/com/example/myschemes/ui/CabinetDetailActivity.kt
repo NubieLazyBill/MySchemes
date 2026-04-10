@@ -14,15 +14,13 @@ import com.example.myschemes.data.database.SchemeDatabase
 import com.example.myschemes.data.model.Scheme
 import com.example.myschemes.data.repository.SchemeRepository
 import com.example.myschemes.utils.PhotoHelper
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import androidx.fragment.app.FragmentActivity
 
-class CabinetDetailActivity : FragmentActivity() {
+class CabinetDetailActivity : AppCompatActivity() {  // ← changed to AppCompatActivity
 
     // Заголовок и информация
     private lateinit var tvTitle: TextView
@@ -180,6 +178,15 @@ class CabinetDetailActivity : FragmentActivity() {
             .show()
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,  // ← changed to Array<String>
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        photoHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
     private fun onPhotoTaken(key: String, path: String) {
         photoPaths[key] = path
         if (key == "general") {
@@ -210,7 +217,6 @@ class CabinetDetailActivity : FragmentActivity() {
 
     private fun loadImagePreview(imageView: ImageView, path: String) {
         val file = if (path.startsWith("content://")) {
-            // Для URI из галереи нужно использовать ContentResolver
             return
         } else {
             File(path)
@@ -381,6 +387,6 @@ class CabinetDetailActivity : FragmentActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        photoHelper.handleActivityResult(requestCode, resultCode, data)
+        photoHelper.handleActivityResult(requestCode, resultCode, data)  // ← добавить
     }
 }
