@@ -33,11 +33,10 @@ class PhotoGalleryDialog(
         // Адаптер с отображением миниатюр
         adapter = object : ArrayAdapter<String>(activity, android.R.layout.simple_list_item_1, photos) {
             override fun getView(position: Int, convertView: android.view.View?, parent: android.view.ViewGroup): android.view.View {
-                val view = super.getView(position, convertView, parent)
+                val itemView = super.getView(position, convertView, parent)
                 val photoPath = photos[position]
-                val tv = view as TextView
+                val tv = itemView as TextView
 
-                // Показываем имя файла или иконку
                 val fileName = if (photoPath.startsWith("content://")) {
                     "Фото из галереи"
                 } else {
@@ -46,7 +45,7 @@ class PhotoGalleryDialog(
                 tv.text = "📸 ${fileName.take(30)}"
                 tv.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.drawable.ic_menu_gallery, 0)
                 tv.compoundDrawablePadding = 16
-                return view
+                return itemView
             }
         }
         listView.adapter = adapter

@@ -1,9 +1,7 @@
 package com.example.myschemes.ui
 
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
@@ -22,12 +20,8 @@ import java.util.*
 
 class CabinetDetailActivity : AppCompatActivity() {
 
-    // Заголовок и информация
+    // Заголовок и статус
     private lateinit var tvTitle: TextView
-    private lateinit var tvEquipmentName: TextView
-    private lateinit var tvCellNumber: TextView
-    private lateinit var tvLastRevisionDate: TextView
-    private lateinit var tvNextRevisionDate: TextView
     private lateinit var tvStatus: TextView
 
     // Редактируемые поля
@@ -49,7 +43,7 @@ class CabinetDetailActivity : AppCompatActivity() {
     private lateinit var cbHeating: CheckBox
     private lateinit var cbGrounding: CheckBox
 
-    // Кнопки фото для чек-листа
+    // Кнопки фото
     private lateinit var btnCabinetNamePhoto: ImageButton
     private lateinit var btnSwitchesNamePhoto: ImageButton
     private lateinit var btnInventoryNumberPhoto: ImageButton
@@ -63,15 +57,8 @@ class CabinetDetailActivity : AppCompatActivity() {
     private lateinit var btnHeatingPhoto: ImageButton
     private lateinit var btnGroundingPhoto: ImageButton
 
-    // Общее фото
-    private lateinit var btnTakeGeneralPhoto: Button
-    private lateinit var btnViewGeneralPhoto: Button
-    private lateinit var ivGeneralPhotoPreview: ImageView
-
-    // Кнопки действий
-    private lateinit var btnSave: Button
+    // Кнопка удаления
     private lateinit var btnDelete: Button
-    private lateinit var btnBack: Button
 
     private lateinit var repository: SchemeRepository
     private lateinit var photoHelper: PhotoHelper
@@ -81,9 +68,6 @@ class CabinetDetailActivity : AppCompatActivity() {
     // Хранилище списков фото для каждого пункта
     private val photosMap = mutableMapOf<String, MutableList<String>>()
 
-    // Храним текущий открытый диалог для передачи результатов
-    private var currentPhotoDialog: PhotoGalleryDialog? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cabinet_detail)
@@ -91,7 +75,7 @@ class CabinetDetailActivity : AppCompatActivity() {
         photoHelper = PhotoHelper(this)
         initViews()
         initPhotosMap()
-        setupPhotoButtons()
+        setupListeners()
 
         schemeId = intent.getIntExtra("scheme_id", 0)
 
@@ -99,18 +83,10 @@ class CabinetDetailActivity : AppCompatActivity() {
         repository = SchemeRepository(database.schemeDao())
 
         loadSchemeData()
-
-        btnSave.setOnClickListener { saveScheme() }
-        btnDelete.setOnClickListener { confirmDelete() }
-        btnBack.setOnClickListener { finish() }
     }
 
     private fun initViews() {
         tvTitle = findViewById(R.id.tvTitle)
-        tvEquipmentName = findViewById(R.id.tvEquipmentName)
-        tvCellNumber = findViewById(R.id.tvCellNumber)
-        tvLastRevisionDate = findViewById(R.id.tvLastRevisionDate)
-        tvNextRevisionDate = findViewById(R.id.tvNextRevisionDate)
         tvStatus = findViewById(R.id.tvStatus)
 
         etSchemeNumber = findViewById(R.id.etSchemeNumber)
@@ -143,13 +119,7 @@ class CabinetDetailActivity : AppCompatActivity() {
         btnHeatingPhoto = findViewById(R.id.btnHeatingPhoto)
         btnGroundingPhoto = findViewById(R.id.btnGroundingPhoto)
 
-        btnTakeGeneralPhoto = findViewById(R.id.btnTakeGeneralPhoto)
-        btnViewGeneralPhoto = findViewById(R.id.btnViewGeneralPhoto)
-        ivGeneralPhotoPreview = findViewById(R.id.ivGeneralPhotoPreview)
-
-        btnSave = findViewById(R.id.btnSave)
         btnDelete = findViewById(R.id.btnDelete)
-        btnBack = findViewById(R.id.btnBack)
     }
 
     private fun initPhotosMap() {
@@ -157,12 +127,44 @@ class CabinetDetailActivity : AppCompatActivity() {
             "cabinetName", "switchesName", "inventoryNumber",
             "lockIntegrity", "sealIntegrity", "cableEntries",
             "noBareWires", "addressLabels", "terminalsIntegrity",
-            "painting", "heating", "grounding", "general"
+            "painting", "heating", "grounding"
         )
         keys.forEach { photosMap[it] = mutableListOf() }
     }
 
-    private fun setupPhotoButtons() {
+    private fun setupListeners() {
+        // Автосохранение при изменении текстовых полей
+        val textWatcher = object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                autoSave()
+            }
+        }
+
+        etSchemeNumber.addTextChangedListener(textWatcher)
+        etEditLastRevisionDate.addTextChangedListener(textWatcher)
+        etEditNextRevisionDate.addTextChangedListener(textWatcher)
+
+        // Автосохранение при изменении чек-боксов
+        val checkBoxListener = android.widget.CompoundButton.OnCheckedChangeListener { _, _ ->
+            autoSave()
+        }
+
+        cbCabinetNameChecked.setOnCheckedChangeListener(checkBoxListener)
+        cbSwitchesNameChecked.setOnCheckedChangeListener(checkBoxListener)
+        cbInventoryNumberChecked.setOnCheckedChangeListener(checkBoxListener)
+        cbLockIntegrity.setOnCheckedChangeListener(checkBoxListener)
+        cbSealIntegrity.setOnCheckedChangeListener(checkBoxListener)
+        cbCableEntries.setOnCheckedChangeListener(checkBoxListener)
+        cbNoBareWires.setOnCheckedChangeListener(checkBoxListener)
+        cbAddressLabels.setOnCheckedChangeListener(checkBoxListener)
+        cbTerminalsIntegrity.setOnCheckedChangeListener(checkBoxListener)
+        cbPainting.setOnCheckedChangeListener(checkBoxListener)
+        cbHeating.setOnCheckedChangeListener(checkBoxListener)
+        cbGrounding.setOnCheckedChangeListener(checkBoxListener)
+
+        // Кнопки фото
         btnCabinetNamePhoto.setOnClickListener { showPhotoGallery("cabinetName", "Диспетчерское наименование") }
         btnSwitchesNamePhoto.setOnClickListener { showPhotoGallery("switchesName", "ДН автоматов, рубильников") }
         btnInventoryNumberPhoto.setOnClickListener { showPhotoGallery("inventoryNumber", "Инвентарный номер") }
@@ -175,154 +177,24 @@ class CabinetDetailActivity : AppCompatActivity() {
         btnPaintingPhoto.setOnClickListener { showPhotoGallery("painting", "Окраска") }
         btnHeatingPhoto.setOnClickListener { showPhotoGallery("heating", "Обогрев") }
         btnGroundingPhoto.setOnClickListener { showPhotoGallery("grounding", "Заземление") }
-        btnTakeGeneralPhoto.setOnClickListener { showPhotoGallery("general", "Общее фото шкафа") }
-        btnViewGeneralPhoto.setOnClickListener { viewPhoto(photosMap["general"]?.firstOrNull()) }
+
+        // Кнопка удаления
+        btnDelete.setOnClickListener { confirmDelete() }
     }
 
     private fun showPhotoGallery(key: String, title: String) {
         val photos = photosMap[key] ?: mutableListOf()
-        currentPhotoDialog = PhotoGalleryDialog(
+        PhotoGalleryDialog(
             activity = this,
             title = title,
             photos = photos
         ) { updatedPhotos ->
             photosMap[key] = updatedPhotos.toMutableList()
-            if (key == "general" && updatedPhotos.isNotEmpty()) {
-                loadImagePreview(ivGeneralPhotoPreview, updatedPhotos.first())
-            }
-        }
-        currentPhotoDialog?.show()
+            autoSave()
+        }.show()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        // Передаём результат в PhotoHelper
-        photoHelper.handleActivityResult(requestCode, resultCode, data)
-        // Также передаём в диалог, если он открыт
-        currentPhotoDialog?.handleActivityResult(requestCode, resultCode, data)
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        photoHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        currentPhotoDialog?.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
-    private fun viewPhoto(path: String?) {
-        if (path.isNullOrEmpty()) {
-            Toast.makeText(this, "Фото не добавлено", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val intent = Intent(Intent.ACTION_VIEW)
-        val uri = if (path.startsWith("content://")) {
-            Uri.parse(path)
-        } else {
-            androidx.core.content.FileProvider.getUriForFile(
-                this,
-                "${packageName}.fileprovider",
-                File(path)
-            )
-        }
-        intent.setDataAndType(uri, "image/*")
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        startActivity(intent)
-    }
-
-    private fun loadImagePreview(imageView: ImageView, path: String) {
-        val file = if (path.startsWith("content://")) {
-            return
-        } else {
-            File(path)
-        }
-        if (file.exists()) {
-            val bitmap = BitmapFactory.decodeFile(path)
-            imageView.setImageBitmap(bitmap)
-        }
-    }
-
-    private fun loadSchemeData() {
-        lifecycleScope.launch {
-            val schemes = repository.getAllSchemes()
-            scheme = schemes.find { it.id == schemeId }
-
-            scheme?.let { s ->
-                displayBasicInfo(s)
-                displayCheckboxes(s)
-                loadPhotos(s)
-            }
-        }
-    }
-
-    private fun displayBasicInfo(scheme: Scheme) {
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-
-        tvTitle.text = "📋 ${scheme.equipmentName}"
-        tvEquipmentName.text = scheme.equipmentName
-        tvCellNumber.text = scheme.cellNumber ?: "—"
-
-        val lastDate = dateFormat.format(Date(scheme.lastRevisionDate))
-        tvLastRevisionDate.text = lastDate
-        etEditLastRevisionDate.setText(lastDate)
-
-        val nextDate = dateFormat.format(Date(scheme.nextRevisionDate))
-        tvNextRevisionDate.text = nextDate
-        etEditNextRevisionDate.setText(nextDate)
-
-        etSchemeNumber.setText(scheme.schemeNumber ?: "")
-
-        val (statusText, statusColor) = getStatusInfo(scheme.nextRevisionDate)
-        tvStatus.text = statusText
-        tvStatus.setTextColor(statusColor)
-    }
-
-    private fun displayCheckboxes(scheme: Scheme) {
-        cbCabinetNameChecked.isChecked = scheme.cabinetNameChecked
-        cbSwitchesNameChecked.isChecked = scheme.switchesNameChecked
-        cbInventoryNumberChecked.isChecked = scheme.inventoryNumberChecked
-        cbLockIntegrity.isChecked = scheme.lockIntegrity
-        cbSealIntegrity.isChecked = scheme.sealIntegrity
-        cbCableEntries.isChecked = scheme.cableEntries
-        cbNoBareWires.isChecked = scheme.noBareWires
-        cbAddressLabels.isChecked = scheme.addressLabels
-        cbTerminalsIntegrity.isChecked = scheme.terminalsIntegrity
-        cbPainting.isChecked = scheme.painting
-        cbHeating.isChecked = scheme.heating
-        cbGrounding.isChecked = scheme.grounding
-    }
-
-    private fun loadPhotos(scheme: Scheme) {
-        photosMap["cabinetName"] = scheme.cabinetNamePhotos.toMutableList()
-        photosMap["switchesName"] = scheme.switchesNamePhotos.toMutableList()
-        photosMap["inventoryNumber"] = scheme.inventoryNumberPhotos.toMutableList()
-        photosMap["lockIntegrity"] = scheme.lockIntegrityPhotos.toMutableList()
-        photosMap["sealIntegrity"] = scheme.sealIntegrityPhotos.toMutableList()
-        photosMap["cableEntries"] = scheme.cableEntriesPhotos.toMutableList()
-        photosMap["noBareWires"] = scheme.noBareWiresPhotos.toMutableList()
-        photosMap["addressLabels"] = scheme.addressLabelsPhotos.toMutableList()
-        photosMap["terminalsIntegrity"] = scheme.terminalsIntegrityPhotos.toMutableList()
-        photosMap["painting"] = scheme.paintingPhotos.toMutableList()
-        photosMap["heating"] = scheme.heatingPhotos.toMutableList()
-        photosMap["grounding"] = scheme.groundingPhotos.toMutableList()
-        photosMap["general"] = scheme.generalPhotos.toMutableList()
-
-        scheme.generalPhotos.firstOrNull()?.let { loadImagePreview(ivGeneralPhotoPreview, it) }
-    }
-
-    private fun getStatusInfo(nextRevisionDate: Long): Pair<String, Int> {
-        val today = System.currentTimeMillis()
-        val daysLeft = ((nextRevisionDate - today) / (1000 * 60 * 60 * 24)).toInt()
-        return when {
-            daysLeft < 0 -> "🔴 Просрочено" to Color.RED
-            daysLeft <= 30 -> "🟡 Скоро истекает" to Color.parseColor("#FF9800")
-            else -> "✅ Активна" to Color.GREEN
-        }
-    }
-
-    private fun saveScheme() {
+    private fun autoSave() {
         scheme?.let { s ->
             val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
@@ -365,8 +237,7 @@ class CabinetDetailActivity : AppCompatActivity() {
                 terminalsIntegrityPhotos = photosMap["terminalsIntegrity"] ?: emptyList(),
                 paintingPhotos = photosMap["painting"] ?: emptyList(),
                 heatingPhotos = photosMap["heating"] ?: emptyList(),
-                groundingPhotos = photosMap["grounding"] ?: emptyList(),
-                generalPhotos = photosMap["general"] ?: emptyList()
+                groundingPhotos = photosMap["grounding"] ?: emptyList()
             )
 
             lifecycleScope.launch {
@@ -375,9 +246,77 @@ class CabinetDetailActivity : AppCompatActivity() {
                 if (index != -1) {
                     allSchemes[index] = updatedScheme
                     repository.saveSchemes(allSchemes)
-                    Toast.makeText(this@CabinetDetailActivity, "Данные сохранены", Toast.LENGTH_SHORT).show()
+                    // Обновляем статус
+                    updateStatusDisplay(updatedScheme)
                 }
             }
+        }
+    }
+
+    private fun updateStatusDisplay(scheme: Scheme) {
+        val (statusText, statusColor) = getStatusInfo(scheme.nextRevisionDate)
+        tvStatus.text = statusText
+        tvStatus.setTextColor(statusColor)
+    }
+
+    private fun loadSchemeData() {
+        lifecycleScope.launch {
+            val schemes = repository.getAllSchemes()
+            scheme = schemes.find { it.id == schemeId }
+
+            scheme?.let { s ->
+                displayData(s)
+                loadPhotos(s)
+                updateStatusDisplay(s)
+            }
+        }
+    }
+
+    private fun displayData(scheme: Scheme) {
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+
+        tvTitle.text = "📋 ${scheme.equipmentName}"
+
+        etSchemeNumber.setText(scheme.schemeNumber ?: "")
+        etEditLastRevisionDate.setText(dateFormat.format(Date(scheme.lastRevisionDate)))
+        etEditNextRevisionDate.setText(dateFormat.format(Date(scheme.nextRevisionDate)))
+
+        cbCabinetNameChecked.isChecked = scheme.cabinetNameChecked
+        cbSwitchesNameChecked.isChecked = scheme.switchesNameChecked
+        cbInventoryNumberChecked.isChecked = scheme.inventoryNumberChecked
+        cbLockIntegrity.isChecked = scheme.lockIntegrity
+        cbSealIntegrity.isChecked = scheme.sealIntegrity
+        cbCableEntries.isChecked = scheme.cableEntries
+        cbNoBareWires.isChecked = scheme.noBareWires
+        cbAddressLabels.isChecked = scheme.addressLabels
+        cbTerminalsIntegrity.isChecked = scheme.terminalsIntegrity
+        cbPainting.isChecked = scheme.painting
+        cbHeating.isChecked = scheme.heating
+        cbGrounding.isChecked = scheme.grounding
+    }
+
+    private fun loadPhotos(scheme: Scheme) {
+        photosMap["cabinetName"] = scheme.cabinetNamePhotos.toMutableList()
+        photosMap["switchesName"] = scheme.switchesNamePhotos.toMutableList()
+        photosMap["inventoryNumber"] = scheme.inventoryNumberPhotos.toMutableList()
+        photosMap["lockIntegrity"] = scheme.lockIntegrityPhotos.toMutableList()
+        photosMap["sealIntegrity"] = scheme.sealIntegrityPhotos.toMutableList()
+        photosMap["cableEntries"] = scheme.cableEntriesPhotos.toMutableList()
+        photosMap["noBareWires"] = scheme.noBareWiresPhotos.toMutableList()
+        photosMap["addressLabels"] = scheme.addressLabelsPhotos.toMutableList()
+        photosMap["terminalsIntegrity"] = scheme.terminalsIntegrityPhotos.toMutableList()
+        photosMap["painting"] = scheme.paintingPhotos.toMutableList()
+        photosMap["heating"] = scheme.heatingPhotos.toMutableList()
+        photosMap["grounding"] = scheme.groundingPhotos.toMutableList()
+    }
+
+    private fun getStatusInfo(nextRevisionDate: Long): Pair<String, Int> {
+        val today = System.currentTimeMillis()
+        val daysLeft = ((nextRevisionDate - today) / (1000 * 60 * 60 * 24)).toInt()
+        return when {
+            daysLeft < 0 -> "🔴 Просрочено" to Color.RED
+            daysLeft <= 30 -> "🟡 Скоро истекает" to Color.parseColor("#FF9800")
+            else -> "✅ Активна" to Color.GREEN
         }
     }
 
@@ -400,5 +339,19 @@ class CabinetDetailActivity : AppCompatActivity() {
             Toast.makeText(this@CabinetDetailActivity, "Схема удалена", Toast.LENGTH_SHORT).show()
             finish()
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        photoHelper.handleActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        photoHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 }
