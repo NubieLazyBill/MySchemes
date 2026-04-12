@@ -3,13 +3,10 @@ package com.example.myschemes.ui
 import android.app.AlertDialog
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
-import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.FileProvider
 import com.example.myschemes.R
+import com.github.chrisbanes.photoview.PhotoView
 import java.io.File
 
 class PhotoViewDialog(
@@ -19,7 +16,7 @@ class PhotoViewDialog(
 
     fun show() {
         val view = LayoutInflater.from(activity).inflate(R.layout.dialog_photo_view, null)
-        val imageView = view.findViewById<ImageView>(R.id.ivFullPhoto)
+        val photoView = view.findViewById<PhotoView>(R.id.photoView)
 
         // Загружаем фото
         val bitmap = if (photoPath.startsWith("content://")) {
@@ -32,10 +29,15 @@ class PhotoViewDialog(
             if (file.exists()) BitmapFactory.decodeFile(photoPath) else null
         }
 
-        imageView.setImageBitmap(bitmap)
+        photoView.setImageBitmap(bitmap)
+
+        // Настройка зума (в коде)
+        photoView.maximumScale = 5.0f
+        photoView.minimumScale = 0.8f
+        photoView.mediumScale = 1.5f
 
         // Клик по фото закрывает диалог
-        imageView.setOnClickListener {
+        photoView.setOnClickListener {
             (view.parent as? android.view.ViewGroup)?.let {
                 (it.parent as? AlertDialog)?.dismiss()
             }
