@@ -21,7 +21,6 @@ class PhotoGalleryDialog(
     private lateinit var photoHelper: PhotoHelper
     private lateinit var listView: ListView
     private lateinit var adapter: ArrayAdapter<String>
-    private var activePhotoCallback: ((String) -> Unit)? = null
 
     fun show() {
         photoHelper = PhotoHelper(activity)
@@ -30,7 +29,6 @@ class PhotoGalleryDialog(
         listView = view.findViewById(R.id.listViewPhotos)
         val btnAdd = view.findViewById<Button>(R.id.btnAddPhoto)
 
-        // Адаптер с отображением миниатюр
         adapter = object : ArrayAdapter<String>(activity, android.R.layout.simple_list_item_1, photos) {
             override fun getView(position: Int, convertView: android.view.View?, parent: android.view.ViewGroup): android.view.View {
                 val itemView = super.getView(position, convertView, parent)
@@ -51,7 +49,6 @@ class PhotoGalleryDialog(
         listView.adapter = adapter
 
         listView.setOnItemClickListener { _, _, position, _ ->
-            // При клике открываем увеличенное фото
             PhotoViewDialog(activity, photos[position]).show()
         }
 
@@ -94,6 +91,7 @@ class PhotoGalleryDialog(
 
     private fun takePhoto() {
         photoHelper.takePhoto { path ->
+            android.util.Log.d("PhotoGallery", "Добавляем фото: $path")
             photos.add(path)
             adapter.notifyDataSetChanged()
             onPhotosChanged(photos)
@@ -102,6 +100,7 @@ class PhotoGalleryDialog(
 
     private fun pickFromGallery() {
         photoHelper.pickFromGallery { path ->
+            android.util.Log.d("PhotoGallery", "Фото из галереи: $path")
             photos.add(path)
             adapter.notifyDataSetChanged()
             onPhotosChanged(photos)

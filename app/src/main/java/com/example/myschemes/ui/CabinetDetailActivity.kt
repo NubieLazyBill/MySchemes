@@ -68,6 +68,9 @@ class CabinetDetailActivity : AppCompatActivity() {
     // Хранилище списков фото для каждого пункта
     private val photosMap = mutableMapOf<String, MutableList<String>>()
 
+    // Храним текущий открытый диалог для передачи результатов
+    private var currentPhotoDialog: PhotoGalleryDialog? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cabinet_detail)
@@ -180,18 +183,47 @@ class CabinetDetailActivity : AppCompatActivity() {
 
         // Кнопка удаления
         btnDelete.setOnClickListener { confirmDelete() }
+
+        // Автообновление даты следующего пересмотра при изменении даты схемы
+        etEditLastRevisionDate.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val dateStr = s.toString()
+                if (dateStr.isNotEmpty()) {
+                    val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+                    try {
+                        val parsedDate = dateFormat.parse(dateStr)
+                        parsedDate?.let {
+                            val calendar = Calendar.getInstance().apply {
+                                time = it
+                                add(Calendar.YEAR, 3)
+                            }
+                            val newNextDate = dateFormat.format(calendar.time)
+                            // Обновляем поле, только если оно не совпадает с текущим
+                            if (etEditNextRevisionDate.text.toString() != newNextDate) {
+                                etEditNextRevisionDate.setText(newNextDate)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // Невалидная дата, игнорируем
+                    }
+                }
+            }
+        })
     }
 
     private fun showPhotoGallery(key: String, title: String) {
         val photos = photosMap[key] ?: mutableListOf()
-        PhotoGalleryDialog(
+        currentPhotoDialog = PhotoGalleryDialog(
             activity = this,
             title = title,
             photos = photos
         ) { updatedPhotos ->
             photosMap[key] = updatedPhotos.toMutableList()
             autoSave()
-        }.show()
+        }
+        currentPhotoDialog?.show()
     }
 
     private fun autoSave() {
@@ -343,7 +375,9 @@ class CabinetDetailActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        android.util.Log.d("CabinetDetail", "onActivityResult: requestCode=$requestCode, resultCode=$resultCode")
         photoHelper.handleActivityResult(requestCode, resultCode, data)
+        currentPhotoDialog?.handleActivityResult(requestCode, resultCode, data)
     }
 
     override fun onRequestPermissionsResult(

@@ -76,16 +76,20 @@ class PhotoHelper(private val activity: AppCompatActivity) {
     }
 
     fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        android.util.Log.d("PhotoHelper", "handleActivityResult: requestCode=$requestCode, resultCode=$resultCode")
         if (resultCode == Activity.RESULT_OK) {
             when (requestCode) {
                 REQUEST_IMAGE_CAPTURE -> {
+                    android.util.Log.d("PhotoHelper", "Фото с камеры: $currentPhotoPath")
                     currentPhotoPath?.let {
                         currentCallback?.invoke(it)
                     }
                 }
                 REQUEST_GALLERY -> {
-                    data?.data?.let { uri ->
-                        currentCallback?.invoke(uri.toString())
+                    val uri = data?.data
+                    android.util.Log.d("PhotoHelper", "URI из галереи: $uri")
+                    uri?.let {
+                        currentCallback?.invoke(it.toString())
                     }
                 }
             }
