@@ -21,6 +21,8 @@ import com.example.myschemes.utils.FileHelper
 
 class CabinetDetailActivity : AppCompatActivity() {
 
+    private var isLoading = false
+
     // Заголовок и статус
     private lateinit var tvTitle: TextView
     private lateinit var tvStatus: TextView
@@ -142,8 +144,9 @@ class CabinetDetailActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {
-                autoSave()
+                if (!isLoading) autoSave()
             }
+
         }
 
         etSchemeNumber.addTextChangedListener(textWatcher)
@@ -152,7 +155,7 @@ class CabinetDetailActivity : AppCompatActivity() {
 
         // Автосохранение при изменении чек-боксов
         val checkBoxListener = android.widget.CompoundButton.OnCheckedChangeListener { _, _ ->
-            autoSave()
+            if (!isLoading) autoSave()
         }
 
         cbCabinetNameChecked.setOnCheckedChangeListener(checkBoxListener)
@@ -228,7 +231,14 @@ class CabinetDetailActivity : AppCompatActivity() {
     }
 
     private fun autoSave() {
+        if (isLoading) return  // Не сохраняем во время загрузки
+
         scheme?.let { s ->
+            android.util.Log.d("CabinetDetail", "=== AUTO SAVE ===")
+            android.util.Log.d("CabinetDetail", "Сохраняем фото cabinetName: ${photosMap["cabinetName"]}")
+            android.util.Log.d("CabinetDetail", "Сохраняем фото switchesName: ${photosMap["switchesName"]}")
+            android.util.Log.d("CabinetDetail", "Сохраняем фото inventoryNumber: ${photosMap["inventoryNumber"]}")
+
             val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
             val schemeNumber = etSchemeNumber.text.toString().takeIf { it.isNotEmpty() }
@@ -294,6 +304,7 @@ class CabinetDetailActivity : AppCompatActivity() {
 
     private fun loadSchemeData() {
         lifecycleScope.launch {
+            isLoading = true
             val schemes = repository.getAllSchemes()
             scheme = schemes.find { it.id == schemeId }
 
@@ -302,6 +313,7 @@ class CabinetDetailActivity : AppCompatActivity() {
                 loadPhotos(s)
                 updateStatusDisplay(s)
             }
+            isLoading = false
         }
     }
 
@@ -329,6 +341,7 @@ class CabinetDetailActivity : AppCompatActivity() {
     }
 
     private fun loadPhotos(scheme: Scheme) {
+        android.util.Log.d("CabinetDetail", "Загрузка фото из схемы: ${scheme.cabinetNamePhotos}")
         photosMap["cabinetName"] = scheme.cabinetNamePhotos.filter { File(it).exists() }.toMutableList()
         photosMap["switchesName"] = scheme.switchesNamePhotos.filter { File(it).exists() }.toMutableList()
         photosMap["inventoryNumber"] = scheme.inventoryNumberPhotos.filter { File(it).exists() }.toMutableList()
@@ -341,6 +354,8 @@ class CabinetDetailActivity : AppCompatActivity() {
         photosMap["painting"] = scheme.paintingPhotos.filter { File(it).exists() }.toMutableList()
         photosMap["heating"] = scheme.heatingPhotos.filter { File(it).exists() }.toMutableList()
         photosMap["grounding"] = scheme.groundingPhotos.filter { File(it).exists() }.toMutableList()
+
+        android.util.Log.d("CabinetDetail", "После фильтрации cabinetName: ${photosMap["cabinetName"]}")
     }
 
     private fun getStatusInfo(nextRevisionDate: Long): Pair<String, Int> {
