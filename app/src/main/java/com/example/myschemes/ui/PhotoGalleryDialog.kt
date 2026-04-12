@@ -8,6 +8,7 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import com.example.myschemes.R
+import com.example.myschemes.utils.FileHelper
 import com.example.myschemes.utils.PhotoHelper
 import java.io.File
 
@@ -91,19 +92,29 @@ class PhotoGalleryDialog(
 
     private fun takePhoto() {
         photoHelper.takePhoto { path ->
-            android.util.Log.d("PhotoGallery", "Добавляем фото: $path")
-            photos.add(path)
-            adapter.notifyDataSetChanged()
-            onPhotosChanged(photos)
+            android.util.Log.d("PhotoGallery", "Фото получено (временное): $path")
+            val savedPath = FileHelper.savePhotoToAppStorage(activity, path)
+            if (savedPath != null) {
+                android.util.Log.d("PhotoGallery", "Фото сохранено: $savedPath")
+                photos.add(savedPath)
+                adapter.notifyDataSetChanged()
+                onPhotosChanged(photos)
+            }
+            // Удаляем временный файл
+            File(path).delete()
         }
     }
 
     private fun pickFromGallery() {
         photoHelper.pickFromGallery { path ->
             android.util.Log.d("PhotoGallery", "Фото из галереи: $path")
-            photos.add(path)
-            adapter.notifyDataSetChanged()
-            onPhotosChanged(photos)
+            val savedPath = FileHelper.savePhotoToAppStorage(activity, path)
+            if (savedPath != null) {
+                android.util.Log.d("PhotoGallery", "Фото сохранено: $savedPath")
+                photos.add(savedPath)
+                adapter.notifyDataSetChanged()
+                onPhotosChanged(photos)
+            }
         }
     }
 
@@ -112,6 +123,8 @@ class PhotoGalleryDialog(
             .setTitle("Удалить фото")
             .setMessage("Вы уверены?")
             .setPositiveButton("Да") { _, _ ->
+                val photoPath = photos[position]
+                FileHelper.deletePhotoFromAppStorage(activity, photoPath)
                 photos.removeAt(position)
                 adapter.notifyDataSetChanged()
                 onPhotosChanged(photos)

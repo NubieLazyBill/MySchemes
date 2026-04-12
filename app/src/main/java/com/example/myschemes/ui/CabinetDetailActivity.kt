@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.myschemes.utils.FileHelper
 
 class CabinetDetailActivity : AppCompatActivity() {
 
@@ -328,18 +329,18 @@ class CabinetDetailActivity : AppCompatActivity() {
     }
 
     private fun loadPhotos(scheme: Scheme) {
-        photosMap["cabinetName"] = scheme.cabinetNamePhotos.toMutableList()
-        photosMap["switchesName"] = scheme.switchesNamePhotos.toMutableList()
-        photosMap["inventoryNumber"] = scheme.inventoryNumberPhotos.toMutableList()
-        photosMap["lockIntegrity"] = scheme.lockIntegrityPhotos.toMutableList()
-        photosMap["sealIntegrity"] = scheme.sealIntegrityPhotos.toMutableList()
-        photosMap["cableEntries"] = scheme.cableEntriesPhotos.toMutableList()
-        photosMap["noBareWires"] = scheme.noBareWiresPhotos.toMutableList()
-        photosMap["addressLabels"] = scheme.addressLabelsPhotos.toMutableList()
-        photosMap["terminalsIntegrity"] = scheme.terminalsIntegrityPhotos.toMutableList()
-        photosMap["painting"] = scheme.paintingPhotos.toMutableList()
-        photosMap["heating"] = scheme.heatingPhotos.toMutableList()
-        photosMap["grounding"] = scheme.groundingPhotos.toMutableList()
+        photosMap["cabinetName"] = scheme.cabinetNamePhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["switchesName"] = scheme.switchesNamePhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["inventoryNumber"] = scheme.inventoryNumberPhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["lockIntegrity"] = scheme.lockIntegrityPhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["sealIntegrity"] = scheme.sealIntegrityPhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["cableEntries"] = scheme.cableEntriesPhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["noBareWires"] = scheme.noBareWiresPhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["addressLabels"] = scheme.addressLabelsPhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["terminalsIntegrity"] = scheme.terminalsIntegrityPhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["painting"] = scheme.paintingPhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["heating"] = scheme.heatingPhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["grounding"] = scheme.groundingPhotos.filter { File(it).exists() }.toMutableList()
     }
 
     private fun getStatusInfo(nextRevisionDate: Long): Pair<String, Int> {
@@ -365,6 +366,13 @@ class CabinetDetailActivity : AppCompatActivity() {
 
     private fun deleteScheme() {
         lifecycleScope.launch {
+            // Удаляем все фото из хранилища
+            photosMap.values.forEach { photoList ->
+                photoList.forEach { photoPath ->
+                    FileHelper.deletePhotoFromAppStorage(this@CabinetDetailActivity, photoPath)
+                }
+            }
+
             val allSchemes = repository.getAllSchemes().toMutableList()
             allSchemes.removeAll { it.id == schemeId }
             repository.saveSchemes(allSchemes)
