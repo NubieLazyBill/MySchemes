@@ -9,7 +9,7 @@ import com.example.myschemes.data.model.Scheme
 
 @Database(
     entities = [Scheme::class],
-    version = 3,  // ← увеличили с 2 до 3
+    version = 4,  // ← увеличили с 3 до 4
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -63,20 +63,6 @@ class CabinetDetailActivity : AppCompatActivity() {
     private lateinit var btnHeatingPhoto: ImageButton
     private lateinit var btnGroundingPhoto: ImageButton
 
-    // Превью фото
-    private lateinit var ivCabinetNamePreview: ImageView
-    private lateinit var ivSwitchesNamePreview: ImageView
-    private lateinit var ivInventoryNumberPreview: ImageView
-    private lateinit var ivLockIntegrityPreview: ImageView
-    private lateinit var ivSealIntegrityPreview: ImageView
-    private lateinit var ivCableEntriesPreview: ImageView
-    private lateinit var ivNoBareWiresPreview: ImageView
-    private lateinit var ivAddressLabelsPreview: ImageView
-    private lateinit var ivTerminalsIntegrityPreview: ImageView
-    private lateinit var ivPaintingPreview: ImageView
-    private lateinit var ivHeatingPreview: ImageView
-    private lateinit var ivGroundingPreview: ImageView
-
     // Общее фото
     private lateinit var btnTakeGeneralPhoto: Button
     private lateinit var btnViewGeneralPhoto: Button
@@ -92,8 +78,11 @@ class CabinetDetailActivity : AppCompatActivity() {
     private var scheme: Scheme? = null
     private var schemeId: Int = 0
 
-    // Хранилище путей к фото
-    private val photoPaths = mutableMapOf<String, String?>()
+    // Хранилище списков фото для каждого пункта
+    private val photosMap = mutableMapOf<String, MutableList<String>>()
+
+    // Храним текущий открытый диалог для передачи результатов
+    private var currentPhotoDialog: PhotoGalleryDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,6 +90,7 @@ class CabinetDetailActivity : AppCompatActivity() {
 
         photoHelper = PhotoHelper(this)
         initViews()
+        initPhotosMap()
         setupPhotoButtons()
 
         schemeId = intent.getIntExtra("scheme_id", 0)
@@ -140,7 +130,6 @@ class CabinetDetailActivity : AppCompatActivity() {
         cbHeating = findViewById(R.id.cbHeating)
         cbGrounding = findViewById(R.id.cbGrounding)
 
-        // Кнопки фото
         btnCabinetNamePhoto = findViewById(R.id.btnCabinetNamePhoto)
         btnSwitchesNamePhoto = findViewById(R.id.btnSwitchesNamePhoto)
         btnInventoryNumberPhoto = findViewById(R.id.btnInventoryNumberPhoto)
@@ -154,20 +143,6 @@ class CabinetDetailActivity : AppCompatActivity() {
         btnHeatingPhoto = findViewById(R.id.btnHeatingPhoto)
         btnGroundingPhoto = findViewById(R.id.btnGroundingPhoto)
 
-        // Превью
-        ivCabinetNamePreview = findViewById(R.id.ivCabinetNamePreview)
-        ivSwitchesNamePreview = findViewById(R.id.ivSwitchesNamePreview)
-        ivInventoryNumberPreview = findViewById(R.id.ivInventoryNumberPreview)
-        ivLockIntegrityPreview = findViewById(R.id.ivLockIntegrityPreview)
-        ivSealIntegrityPreview = findViewById(R.id.ivSealIntegrityPreview)
-        ivCableEntriesPreview = findViewById(R.id.ivCableEntriesPreview)
-        ivNoBareWiresPreview = findViewById(R.id.ivNoBareWiresPreview)
-        ivAddressLabelsPreview = findViewById(R.id.ivAddressLabelsPreview)
-        ivTerminalsIntegrityPreview = findViewById(R.id.ivTerminalsIntegrityPreview)
-        ivPaintingPreview = findViewById(R.id.ivPaintingPreview)
-        ivHeatingPreview = findViewById(R.id.ivHeatingPreview)
-        ivGroundingPreview = findViewById(R.id.ivGroundingPreview)
-
         btnTakeGeneralPhoto = findViewById(R.id.btnTakeGeneralPhoto)
         btnViewGeneralPhoto = findViewById(R.id.btnViewGeneralPhoto)
         ivGeneralPhotoPreview = findViewById(R.id.ivGeneralPhotoPreview)
@@ -177,34 +152,54 @@ class CabinetDetailActivity : AppCompatActivity() {
         btnBack = findViewById(R.id.btnBack)
     }
 
-    private fun setupPhotoButtons() {
-        btnCabinetNamePhoto.setOnClickListener { showPhotoOptions("cabinetName") }
-        btnSwitchesNamePhoto.setOnClickListener { showPhotoOptions("switchesName") }
-        btnInventoryNumberPhoto.setOnClickListener { showPhotoOptions("inventoryNumber") }
-        btnLockIntegrityPhoto.setOnClickListener { showPhotoOptions("lockIntegrity") }
-        btnSealIntegrityPhoto.setOnClickListener { showPhotoOptions("sealIntegrity") }
-        btnCableEntriesPhoto.setOnClickListener { showPhotoOptions("cableEntries") }
-        btnNoBareWiresPhoto.setOnClickListener { showPhotoOptions("noBareWires") }
-        btnAddressLabelsPhoto.setOnClickListener { showPhotoOptions("addressLabels") }
-        btnTerminalsIntegrityPhoto.setOnClickListener { showPhotoOptions("terminalsIntegrity") }
-        btnPaintingPhoto.setOnClickListener { showPhotoOptions("painting") }
-        btnHeatingPhoto.setOnClickListener { showPhotoOptions("heating") }
-        btnGroundingPhoto.setOnClickListener { showPhotoOptions("grounding") }
-        btnTakeGeneralPhoto.setOnClickListener { showPhotoOptions("general") }
-        btnViewGeneralPhoto.setOnClickListener { viewPhoto(photoPaths["general"]) }
+    private fun initPhotosMap() {
+        val keys = listOf(
+            "cabinetName", "switchesName", "inventoryNumber",
+            "lockIntegrity", "sealIntegrity", "cableEntries",
+            "noBareWires", "addressLabels", "terminalsIntegrity",
+            "painting", "heating", "grounding", "general"
+        )
+        keys.forEach { photosMap[it] = mutableListOf() }
     }
 
-    private fun showPhotoOptions(key: String) {
-        val options = arrayOf("📷 Сделать фото", "🖼️ Выбрать из галереи", "❌ Отмена")
-        AlertDialog.Builder(this)
-            .setTitle("Добавить фото")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> photoHelper.takePhoto { path -> onPhotoTaken(key, path) }
-                    1 -> photoHelper.pickFromGallery { path -> onPhotoTaken(key, path) }
-                }
+    private fun setupPhotoButtons() {
+        btnCabinetNamePhoto.setOnClickListener { showPhotoGallery("cabinetName", "Диспетчерское наименование") }
+        btnSwitchesNamePhoto.setOnClickListener { showPhotoGallery("switchesName", "ДН автоматов, рубильников") }
+        btnInventoryNumberPhoto.setOnClickListener { showPhotoGallery("inventoryNumber", "Инвентарный номер") }
+        btnLockIntegrityPhoto.setOnClickListener { showPhotoGallery("lockIntegrity", "Целостность замков") }
+        btnSealIntegrityPhoto.setOnClickListener { showPhotoGallery("sealIntegrity", "Уплотнение шкафа") }
+        btnCableEntriesPhoto.setOnClickListener { showPhotoGallery("cableEntries", "Заходы кабелей") }
+        btnNoBareWiresPhoto.setOnClickListener { showPhotoGallery("noBareWires", "Оголённые жилы") }
+        btnAddressLabelsPhoto.setOnClickListener { showPhotoGallery("addressLabels", "Адресные бирки") }
+        btnTerminalsIntegrityPhoto.setOnClickListener { showPhotoGallery("terminalsIntegrity", "Клеммники") }
+        btnPaintingPhoto.setOnClickListener { showPhotoGallery("painting", "Окраска") }
+        btnHeatingPhoto.setOnClickListener { showPhotoGallery("heating", "Обогрев") }
+        btnGroundingPhoto.setOnClickListener { showPhotoGallery("grounding", "Заземление") }
+        btnTakeGeneralPhoto.setOnClickListener { showPhotoGallery("general", "Общее фото шкафа") }
+        btnViewGeneralPhoto.setOnClickListener { viewPhoto(photosMap["general"]?.firstOrNull()) }
+    }
+
+    private fun showPhotoGallery(key: String, title: String) {
+        val photos = photosMap[key] ?: mutableListOf()
+        currentPhotoDialog = PhotoGalleryDialog(
+            activity = this,
+            title = title,
+            photos = photos
+        ) { updatedPhotos ->
+            photosMap[key] = updatedPhotos.toMutableList()
+            if (key == "general" && updatedPhotos.isNotEmpty()) {
+                loadImagePreview(ivGeneralPhotoPreview, updatedPhotos.first())
             }
-            .show()
+        }
+        currentPhotoDialog?.show()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        // Передаём результат в PhotoHelper
+        photoHelper.handleActivityResult(requestCode, resultCode, data)
+        // Также передаём в диалог, если он открыт
+        currentPhotoDialog?.handleActivityResult(requestCode, resultCode, data)
     }
 
     override fun onRequestPermissionsResult(
@@ -214,75 +209,7 @@ class CabinetDetailActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         photoHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
-    private fun onPhotoTaken(key: String, path: String) {
-        photoPaths[key] = path
-        when (key) {
-            "cabinetName" -> loadPreview(ivCabinetNamePreview, path)
-            "switchesName" -> loadPreview(ivSwitchesNamePreview, path)
-            "inventoryNumber" -> loadPreview(ivInventoryNumberPreview, path)
-            "lockIntegrity" -> loadPreview(ivLockIntegrityPreview, path)
-            "sealIntegrity" -> loadPreview(ivSealIntegrityPreview, path)
-            "cableEntries" -> loadPreview(ivCableEntriesPreview, path)
-            "noBareWires" -> loadPreview(ivNoBareWiresPreview, path)
-            "addressLabels" -> loadPreview(ivAddressLabelsPreview, path)
-            "terminalsIntegrity" -> loadPreview(ivTerminalsIntegrityPreview, path)
-            "painting" -> loadPreview(ivPaintingPreview, path)
-            "heating" -> loadPreview(ivHeatingPreview, path)
-            "grounding" -> loadPreview(ivGroundingPreview, path)
-            "general" -> loadImagePreview(ivGeneralPhotoPreview, path)
-        }
-        Toast.makeText(this, "Фото добавлено", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun loadPreview(imageView: ImageView, path: String?) {
-        if (path.isNullOrEmpty()) {
-            imageView.visibility = ImageView.GONE
-            return
-        }
-        val file = if (path.startsWith("content://")) {
-            imageView.visibility = ImageView.GONE
-            return
-        } else {
-            File(path)
-        }
-        if (file.exists()) {
-            val bitmap = BitmapFactory.decodeFile(path)
-            imageView.setImageBitmap(bitmap)
-            imageView.visibility = ImageView.VISIBLE
-            // Добавляем клик для увеличенного просмотра
-            imageView.setOnClickListener {
-                showFullScreenImage(path)
-            }
-        } else {
-            imageView.visibility = ImageView.GONE
-        }
-    }
-
-    private fun loadImagePreview(imageView: ImageView, path: String?) {
-        if (path.isNullOrEmpty()) {
-            imageView.setImageResource(android.R.drawable.ic_menu_camera)
-            imageView.setOnClickListener(null)
-            return
-        }
-        val file = if (path.startsWith("content://")) {
-            imageView.setImageResource(android.R.drawable.ic_menu_camera)
-            return
-        } else {
-            File(path)
-        }
-        if (file.exists()) {
-            val bitmap = BitmapFactory.decodeFile(path)
-            imageView.setImageBitmap(bitmap)
-            // Добавляем клик для общего фото
-            imageView.setOnClickListener {
-                showFullScreenImage(path)
-            }
-        } else {
-            imageView.setImageResource(android.R.drawable.ic_menu_camera)
-            imageView.setOnClickListener(null)
-        }
+        currentPhotoDialog?.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     private fun viewPhoto(path: String?) {
@@ -303,6 +230,18 @@ class CabinetDetailActivity : AppCompatActivity() {
         intent.setDataAndType(uri, "image/*")
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         startActivity(intent)
+    }
+
+    private fun loadImagePreview(imageView: ImageView, path: String) {
+        val file = if (path.startsWith("content://")) {
+            return
+        } else {
+            File(path)
+        }
+        if (file.exists()) {
+            val bitmap = BitmapFactory.decodeFile(path)
+            imageView.setImageBitmap(bitmap)
+        }
     }
 
     private fun loadSchemeData() {
@@ -356,35 +295,21 @@ class CabinetDetailActivity : AppCompatActivity() {
     }
 
     private fun loadPhotos(scheme: Scheme) {
-        // Сохраняем пути
-        photoPaths["cabinetName"] = scheme.cabinetNamePhoto
-        photoPaths["switchesName"] = scheme.switchesNamePhoto
-        photoPaths["inventoryNumber"] = scheme.inventoryNumberPhoto
-        photoPaths["lockIntegrity"] = scheme.lockIntegrityPhoto
-        photoPaths["sealIntegrity"] = scheme.sealIntegrityPhoto
-        photoPaths["cableEntries"] = scheme.cableEntriesPhoto
-        photoPaths["noBareWires"] = scheme.noBareWiresPhoto
-        photoPaths["addressLabels"] = scheme.addressLabelsPhoto
-        photoPaths["terminalsIntegrity"] = scheme.terminalsIntegrityPhoto
-        photoPaths["painting"] = scheme.paintingPhoto
-        photoPaths["heating"] = scheme.heatingPhoto
-        photoPaths["grounding"] = scheme.groundingPhoto
-        photoPaths["general"] = scheme.generalPhoto
+        photosMap["cabinetName"] = scheme.cabinetNamePhotos.toMutableList()
+        photosMap["switchesName"] = scheme.switchesNamePhotos.toMutableList()
+        photosMap["inventoryNumber"] = scheme.inventoryNumberPhotos.toMutableList()
+        photosMap["lockIntegrity"] = scheme.lockIntegrityPhotos.toMutableList()
+        photosMap["sealIntegrity"] = scheme.sealIntegrityPhotos.toMutableList()
+        photosMap["cableEntries"] = scheme.cableEntriesPhotos.toMutableList()
+        photosMap["noBareWires"] = scheme.noBareWiresPhotos.toMutableList()
+        photosMap["addressLabels"] = scheme.addressLabelsPhotos.toMutableList()
+        photosMap["terminalsIntegrity"] = scheme.terminalsIntegrityPhotos.toMutableList()
+        photosMap["painting"] = scheme.paintingPhotos.toMutableList()
+        photosMap["heating"] = scheme.heatingPhotos.toMutableList()
+        photosMap["grounding"] = scheme.groundingPhotos.toMutableList()
+        photosMap["general"] = scheme.generalPhotos.toMutableList()
 
-        // Загружаем превью
-        loadPreview(ivCabinetNamePreview, scheme.cabinetNamePhoto)
-        loadPreview(ivSwitchesNamePreview, scheme.switchesNamePhoto)
-        loadPreview(ivInventoryNumberPreview, scheme.inventoryNumberPhoto)
-        loadPreview(ivLockIntegrityPreview, scheme.lockIntegrityPhoto)
-        loadPreview(ivSealIntegrityPreview, scheme.sealIntegrityPhoto)
-        loadPreview(ivCableEntriesPreview, scheme.cableEntriesPhoto)
-        loadPreview(ivNoBareWiresPreview, scheme.noBareWiresPhoto)
-        loadPreview(ivAddressLabelsPreview, scheme.addressLabelsPhoto)
-        loadPreview(ivTerminalsIntegrityPreview, scheme.terminalsIntegrityPhoto)
-        loadPreview(ivPaintingPreview, scheme.paintingPhoto)
-        loadPreview(ivHeatingPreview, scheme.heatingPhoto)
-        loadPreview(ivGroundingPreview, scheme.groundingPhoto)
-        loadImagePreview(ivGeneralPhotoPreview, scheme.generalPhoto)
+        scheme.generalPhotos.firstOrNull()?.let { loadImagePreview(ivGeneralPhotoPreview, it) }
     }
 
     private fun getStatusInfo(nextRevisionDate: Long): Pair<String, Int> {
@@ -429,19 +354,19 @@ class CabinetDetailActivity : AppCompatActivity() {
                 painting = cbPainting.isChecked,
                 heating = cbHeating.isChecked,
                 grounding = cbGrounding.isChecked,
-                cabinetNamePhoto = photoPaths["cabinetName"],
-                switchesNamePhoto = photoPaths["switchesName"],
-                inventoryNumberPhoto = photoPaths["inventoryNumber"],
-                lockIntegrityPhoto = photoPaths["lockIntegrity"],
-                sealIntegrityPhoto = photoPaths["sealIntegrity"],
-                cableEntriesPhoto = photoPaths["cableEntries"],
-                noBareWiresPhoto = photoPaths["noBareWires"],
-                addressLabelsPhoto = photoPaths["addressLabels"],
-                terminalsIntegrityPhoto = photoPaths["terminalsIntegrity"],
-                paintingPhoto = photoPaths["painting"],
-                heatingPhoto = photoPaths["heating"],
-                groundingPhoto = photoPaths["grounding"],
-                generalPhoto = photoPaths["general"]
+                cabinetNamePhotos = photosMap["cabinetName"] ?: emptyList(),
+                switchesNamePhotos = photosMap["switchesName"] ?: emptyList(),
+                inventoryNumberPhotos = photosMap["inventoryNumber"] ?: emptyList(),
+                lockIntegrityPhotos = photosMap["lockIntegrity"] ?: emptyList(),
+                sealIntegrityPhotos = photosMap["sealIntegrity"] ?: emptyList(),
+                cableEntriesPhotos = photosMap["cableEntries"] ?: emptyList(),
+                noBareWiresPhotos = photosMap["noBareWires"] ?: emptyList(),
+                addressLabelsPhotos = photosMap["addressLabels"] ?: emptyList(),
+                terminalsIntegrityPhotos = photosMap["terminalsIntegrity"] ?: emptyList(),
+                paintingPhotos = photosMap["painting"] ?: emptyList(),
+                heatingPhotos = photosMap["heating"] ?: emptyList(),
+                groundingPhotos = photosMap["grounding"] ?: emptyList(),
+                generalPhotos = photosMap["general"] ?: emptyList()
             )
 
             lifecycleScope.launch {
@@ -451,7 +376,6 @@ class CabinetDetailActivity : AppCompatActivity() {
                     allSchemes[index] = updatedScheme
                     repository.saveSchemes(allSchemes)
                     Toast.makeText(this@CabinetDetailActivity, "Данные сохранены", Toast.LENGTH_SHORT).show()
-                    loadPhotos(updatedScheme)
                 }
             }
         }
@@ -476,27 +400,5 @@ class CabinetDetailActivity : AppCompatActivity() {
             Toast.makeText(this@CabinetDetailActivity, "Схема удалена", Toast.LENGTH_SHORT).show()
             finish()
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        photoHelper.handleActivityResult(requestCode, resultCode, data)
-    }
-
-    private fun showFullScreenImage(path: String) {
-        val imageView = ImageView(this)
-        val bitmap = BitmapFactory.decodeFile(path)
-        if (bitmap == null) {
-            Toast.makeText(this, "Не удалось загрузить фото", Toast.LENGTH_SHORT).show()
-            return
-        }
-        imageView.setImageBitmap(bitmap)
-        imageView.scaleType = ImageView.ScaleType.FIT_CENTER
-
-        AlertDialog.Builder(this)
-            .setTitle("Фото дефекта")
-            .setView(imageView)
-            .setPositiveButton("Закрыть") { dialog, _ -> dialog.dismiss() }
-            .show()
     }
 }

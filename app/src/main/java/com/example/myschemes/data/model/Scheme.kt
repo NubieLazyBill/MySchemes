@@ -2,9 +2,12 @@ package com.example.myschemes.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import com.example.myschemes.data.database.Converters
 import java.io.Serializable
 
 @Entity(tableName = "schemes")
+@TypeConverters(Converters::class)
 data class Scheme(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
@@ -29,22 +32,22 @@ data class Scheme(
     val heating: Boolean = false,
     val grounding: Boolean = false,
 
-    // Фото для каждого пункта
-    val cabinetNamePhoto: String? = null,
-    val switchesNamePhoto: String? = null,
-    val inventoryNumberPhoto: String? = null,
-    val lockIntegrityPhoto: String? = null,
-    val sealIntegrityPhoto: String? = null,
-    val cableEntriesPhoto: String? = null,
-    val noBareWiresPhoto: String? = null,
-    val addressLabelsPhoto: String? = null,
-    val terminalsIntegrityPhoto: String? = null,
-    val paintingPhoto: String? = null,
-    val heatingPhoto: String? = null,
-    val groundingPhoto: String? = null,
+    // Фото для каждого пункта (список путей)
+    val cabinetNamePhotos: List<String> = emptyList(),
+    val switchesNamePhotos: List<String> = emptyList(),
+    val inventoryNumberPhotos: List<String> = emptyList(),
+    val lockIntegrityPhotos: List<String> = emptyList(),
+    val sealIntegrityPhotos: List<String> = emptyList(),
+    val cableEntriesPhotos: List<String> = emptyList(),
+    val noBareWiresPhotos: List<String> = emptyList(),
+    val addressLabelsPhotos: List<String> = emptyList(),
+    val terminalsIntegrityPhotos: List<String> = emptyList(),
+    val paintingPhotos: List<String> = emptyList(),
+    val heatingPhotos: List<String> = emptyList(),
+    val groundingPhotos: List<String> = emptyList(),
 
-    // Общее фото шкафа
-    val generalPhoto: String? = null
+    // Общее фото шкафа (тоже список)
+    val generalPhotos: List<String> = emptyList()
 ) : Serializable {
 
     fun getStatus(): SchemeStatus {
