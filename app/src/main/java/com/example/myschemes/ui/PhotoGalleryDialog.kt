@@ -2,15 +2,19 @@ package com.example.myschemes.ui
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.FileProvider
 import com.example.myschemes.R
 import com.example.myschemes.utils.FileHelper
 import com.example.myschemes.utils.PhotoHelper
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 class PhotoGalleryDialog(
     private val activity: AppCompatActivity,
@@ -21,7 +25,7 @@ class PhotoGalleryDialog(
 
     private lateinit var photoHelper: PhotoHelper
     private lateinit var listView: ListView
-    private lateinit var adapter: ArrayAdapter<String>
+    private lateinit var adapter: PhotoListAdapter
 
     fun show() {
         photoHelper = PhotoHelper(activity)
@@ -30,23 +34,7 @@ class PhotoGalleryDialog(
         listView = view.findViewById(R.id.listViewPhotos)
         val btnAdd = view.findViewById<Button>(R.id.btnAddPhoto)
 
-        adapter = object : ArrayAdapter<String>(activity, android.R.layout.simple_list_item_1, photos) {
-            override fun getView(position: Int, convertView: android.view.View?, parent: android.view.ViewGroup): android.view.View {
-                val itemView = super.getView(position, convertView, parent)
-                val photoPath = photos[position]
-                val tv = itemView as TextView
-
-                val fileName = if (photoPath.startsWith("content://")) {
-                    "Фото из галереи"
-                } else {
-                    File(photoPath).name
-                }
-                tv.text = "📸 ${fileName.take(30)}"
-                tv.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.drawable.ic_menu_gallery, 0)
-                tv.compoundDrawablePadding = 16
-                return itemView
-            }
-        }
+        adapter = PhotoListAdapter(activity, photos)
         listView.adapter = adapter
 
         listView.setOnItemClickListener { _, _, position, _ ->
@@ -121,5 +109,76 @@ class PhotoGalleryDialog(
             }
             .setNegativeButton("Нет", null)
             .show()
+    }
+
+    // Внутренний адаптер с миниатюрами
+    inner class PhotoListAdapter(
+        private val context: android.content.Context,
+        private val photoList: List<String>
+    ) : BaseAdapter() {
+
+        private val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
+
+        override fun getCount(): Int = photoList.size
+
+        override fun getItem(position: Int): Any = photoList[position]
+
+        override fun getItemId(position: Int): Long = position.toLong()
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val view = convertView ?: LayoutInflater.from(context)
+                .inflate(android.R.layout.simple_list_item_1, parent, false)
+
+            val text1 = view.findViewById<TextView>(android.R.id.text1)
+            val photoPath = photoList[position]
+
+            // Название = дата создания файла
+            val fileName = if (photoPath.startsWith("content://")) {
+                "Фото из галереи"
+            } else {
+                val file = File(photoPath)
+                if (file.exists()) {
+                    val lastModified = Date(file.lastModified())
+                    dateFormat.format(lastModified)
+                } else {
+                    "Фото"
+                }
+            }
+
+            text1.text = fileName
+
+            // Загружаем миниатюру
+            loadThumbnail(photoPath) { bitmap ->
+                val drawable = android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
+                drawable.setBounds(0, 0, 160, 120)  // увеличенная миниатюра 160x120
+                text1.setCompoundDrawables(drawable, null, null, null)
+                text1.compoundDrawablePadding = 20
+            }
+
+            return view
+        }
+
+        private fun loadThumbnail(photoPath: String, onResult: (android.graphics.Bitmap) -> Unit) {
+            Thread {
+                val bitmap = if (photoPath.startsWith("content://")) {
+                    val uri = Uri.parse(photoPath)
+                    context.contentResolver.openInputStream(uri)?.use { stream ->
+                        android.graphics.BitmapFactory.decodeStream(stream)
+                    }
+                } else {
+                    val file = File(photoPath)
+                    if (file.exists()) {
+                        val options = android.graphics.BitmapFactory.Options()
+                        options.inSampleSize = 3  // уменьшаем для миниатюры
+                        android.graphics.BitmapFactory.decodeFile(photoPath, options)
+                    } else null
+                }
+                bitmap?.let {
+                    (activity as? AppCompatActivity)?.runOnUiThread {
+                        onResult(it)
+                    }
+                }
+            }.start()
+        }
     }
 }
