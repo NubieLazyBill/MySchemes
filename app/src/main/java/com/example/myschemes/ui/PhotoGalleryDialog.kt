@@ -92,29 +92,19 @@ class PhotoGalleryDialog(
 
     private fun takePhoto() {
         photoHelper.takePhoto { path ->
-            android.util.Log.d("PhotoGallery", "Фото получено (временное): $path")
-            val savedPath = FileHelper.savePhotoToAppStorage(activity, path)
-            if (savedPath != null) {
-                android.util.Log.d("PhotoGallery", "Фото сохранено: $savedPath")
-                photos.add(savedPath)
-                adapter.notifyDataSetChanged()
-                onPhotosChanged(photos)
-            }
-            // Удаляем временный файл
-            File(path).delete()
+            android.util.Log.d("PhotoGallery", "Фото получено: $path")
+            photos.add(path)
+            adapter.notifyDataSetChanged()
+            onPhotosChanged(photos)
         }
     }
 
     private fun pickFromGallery() {
         photoHelper.pickFromGallery { path ->
-            android.util.Log.d("PhotoGallery", "Фото из галереи: $path")
-            val savedPath = FileHelper.savePhotoToAppStorage(activity, path)
-            if (savedPath != null) {
-                android.util.Log.d("PhotoGallery", "Фото сохранено: $savedPath")
-                photos.add(savedPath)
-                adapter.notifyDataSetChanged()
-                onPhotosChanged(photos)
-            }
+            android.util.Log.d("PhotoGallery", "Фото из галереи сохранено: $path")
+            photos.add(path)
+            adapter.notifyDataSetChanged()
+            onPhotosChanged(photos)
         }
     }
 

@@ -7,60 +7,14 @@
     android:background="#F5F5F5"
     android:padding="16dp">
 
-    <!-- Заголовок -->
-    <TextView
+    <!-- Toolbar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="📋 Мои схемы"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:textColor="#2C3E50"
-        android:paddingBottom="8dp" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
+        android:layout_height="?attr/actionBarSize"
         android:background="#4CAF50"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Кнопки действий -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAddScheme"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:text="➕ Добавить"
-            android:textAllCaps="false"
-            app:icon="@android:drawable/ic_input_add"
-            style="@style/Widget.Material3.Button.OutlinedButton" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnTestNotification"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:text="🔔 Тест уведомления"
-            android:textAllCaps="false"
-            app:icon="@android:drawable/ic_dialog_info" />
-
-    </LinearLayout>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnImport"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="📥 Импорт из CSV"
-        android:textAllCaps="false"
-        app:icon="@android:drawable/ic_menu_save"
-        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:titleTextColor="#FFFFFF"
         android:layout_marginBottom="16dp" />
 
     <!-- Счетчик схем -->
@@ -69,8 +23,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Всего схем: 0"
-        android:textSize="14sp"
-        android:textColor="#666"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#2C3E50"
         android:paddingBottom="8dp" />
 
     <!-- Список схем -->
@@ -85,7 +40,7 @@
         android:id="@+id/tvEmpty"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="📭 Нет данных\n\nНажмите кнопку «Импорт из CSV»\nдля загрузки схем"
+        android:text="📭 Нет данных\n\nНажмите «Импорт из CSV»\nв меню для загрузки схем"
         android:gravity="center"
         android:textSize="16sp"
         android:textColor="#999"

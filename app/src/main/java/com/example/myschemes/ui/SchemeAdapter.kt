@@ -48,20 +48,33 @@ class SchemeAdapter(
             tvCellNumber.text = "Ячейка: ${scheme.cellNumber ?: "—"}"
             tvNextRevisionDate.text = dateFormat.format(Date(scheme.nextRevisionDate))
 
-            val (statusText, statusColor) = getStatusInfo(scheme.nextRevisionDate)
+            val (statusText, bgColor, textColor) = getStatusInfo(scheme.nextRevisionDate)
             tvStatus.text = statusText
-            tvStatus.setBackgroundColor(statusColor)
+            tvStatus.setBackgroundColor(bgColor)
+            tvStatus.setTextColor(textColor)  // ← применяем цвет текста
 
             cardView.setOnClickListener { onItemClick(scheme) }
         }
 
-        private fun getStatusInfo(nextRevisionDate: Long): Pair<String, Int> {
+        private fun getStatusInfo(nextRevisionDate: Long): Triple<String, Int, Int> {
             val today = System.currentTimeMillis()
             val daysLeft = ((nextRevisionDate - today) / (1000 * 60 * 60 * 24)).toInt()
             return when {
-                daysLeft < 0 -> "🔴 Просрочено" to Color.parseColor("#FFCDD2")
-                daysLeft <= 30 -> "🟡 Скоро истекает" to Color.parseColor("#FFE0B2")
-                else -> "✅ Активна" to Color.parseColor("#C8E6C9")
+                daysLeft < 0 -> Triple(
+                    "🔴 Просрочено",
+                    Color.parseColor("#FFEBEE"),
+                    Color.parseColor("#D32F2F")
+                )
+                daysLeft <= 30 -> Triple(
+                    "🟡 Скоро истекает",
+                    Color.parseColor("#FFF3E0"),
+                    Color.parseColor("#F57C00")
+                )
+                else -> Triple(
+                    "✅ Активна",
+                    Color.parseColor("#E8F5E9"),
+                    Color.parseColor("#388E3C")
+                )
             }
         }
     }

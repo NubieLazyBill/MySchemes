@@ -43,7 +43,8 @@ class PhotoHelper(private val activity: AppCompatActivity) {
 
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         if (intent.resolveActivity(activity.packageManager) != null) {
-            val photoFile = createImageFile()
+            // Создаём файл в постоянной папке
+            val photoFile = createPermanentImageFile()
             photoFile?.let {
                 val photoURI = FileProvider.getUriForFile(
                     activity,
@@ -57,22 +58,19 @@ class PhotoHelper(private val activity: AppCompatActivity) {
         }
     }
 
+    private fun createPermanentImageFile(): File? {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val storageDir = File(activity.filesDir, "photos")
+        if (!storageDir.exists()) {
+            storageDir.mkdirs()
+        }
+        return File(storageDir, "IMG_${timeStamp}.jpg")
+    }
+
     fun pickFromGallery(onPhotoSelected: (String) -> Unit) {
         currentCallback = onPhotoSelected
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         activity.startActivityForResult(intent, REQUEST_GALLERY)
-    }
-
-    private fun createImageFile(): File? {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val storageDir = activity.getExternalFilesDir(null)
-        return File.createTempFile(
-            "JPEG_${timeStamp}_",
-            ".jpg",
-            storageDir
-        ).apply {
-            currentPhotoPath = absolutePath
-        }
     }
 
     fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -82,6 +80,7 @@ class PhotoHelper(private val activity: AppCompatActivity) {
                 REQUEST_IMAGE_CAPTURE -> {
                     android.util.Log.d("PhotoHelper", "Фото с камеры: $currentPhotoPath")
                     currentPhotoPath?.let {
+                        // Фото уже в постоянной папке, просто возвращаем путь
                         currentCallback?.invoke(it)
                     }
                 }
@@ -89,7 +88,11 @@ class PhotoHelper(private val activity: AppCompatActivity) {
                     val uri = data?.data
                     android.util.Log.d("PhotoHelper", "URI из галереи: $uri")
                     uri?.let {
-                        currentCallback?.invoke(it.toString())
+                        // Сохраняем фото из галереи в постоянную папку
+                        val savedPath = FileHelper.savePhotoToAppStorage(activity, it.toString())
+                        savedPath?.let { path ->
+                            currentCallback?.invoke(path)
+                        }
                     }
                 }
             }

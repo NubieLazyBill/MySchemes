@@ -9,29 +9,29 @@ object FileHelper {
 
     fun savePhotoToAppStorage(context: Context, sourcePath: String): String? {
         return try {
+            val destinationDir = File(context.filesDir, "photos")
+            if (!destinationDir.exists()) {
+                destinationDir.mkdirs()
+            }
+
             val fileName = "photo_${System.currentTimeMillis()}.jpg"
-            val destinationFile = File(context.filesDir, "photos/$fileName")
+            val destinationFile = File(destinationDir, fileName)
 
-            android.util.Log.d("FileHelper", "Сохраняем фото: $sourcePath -> ${destinationFile.absolutePath}")
-
-            destinationFile.parentFile?.mkdirs()
-
-            val sourceFile = File(sourcePath)
-            if (sourceFile.exists()) {
-                sourceFile.copyTo(destinationFile, overwrite = true)
-                android.util.Log.d("FileHelper", "Фото скопировано из временного файла")
+            val inputStream = if (sourcePath.startsWith("content://")) {
+                val uri = Uri.parse(sourcePath)
+                context.contentResolver.openInputStream(uri)
             } else {
-                val inputStream = context.contentResolver.openInputStream(Uri.parse(sourcePath))
-                inputStream?.use { input ->
-                    FileOutputStream(destinationFile).use { output ->
-                        input.copyTo(output)
-                    }
-                    android.util.Log.d("FileHelper", "Фото скопировано из URI")
+                File(sourcePath).inputStream()
+            }
+
+            inputStream?.use { input ->
+                FileOutputStream(destinationFile).use { output ->
+                    input.copyTo(output)
                 }
             }
+
             destinationFile.absolutePath
         } catch (e: Exception) {
-            android.util.Log.e("FileHelper", "Ошибка сохранения фото: ${e.message}")
             e.printStackTrace()
             null
         }

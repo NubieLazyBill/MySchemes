@@ -31,6 +31,8 @@ class NotificationWorker(
 
                 if (expiring.isNotEmpty() || expired.isNotEmpty()) {
                     showNotification(expiring, expired)
+                } else {
+                    android.util.Log.d("NotificationWorker", "Нет просроченных или истекающих схем")
                 }
 
                 Result.success()
@@ -58,7 +60,7 @@ class NotificationWorker(
         val message = buildString {
             if (expired.isNotEmpty()) {
                 appendLine("🔴 Просрочено: ${expired.size}")
-                expired.take(3).forEach { scheme: Scheme ->  // ← явно указали тип
+                expired.take(3).forEach { scheme: Scheme ->  // ← явный тип
                     appendLine("  • ${scheme.equipmentName}")
                 }
                 if (expired.size > 3) appendLine("  ... и ещё ${expired.size - 3}")
@@ -66,7 +68,7 @@ class NotificationWorker(
             if (expiring.isNotEmpty()) {
                 if (expired.isNotEmpty()) appendLine()
                 appendLine("🟡 Скоро истекают: ${expiring.size}")
-                expiring.take(3).forEach { scheme: Scheme ->  // ← явно указали тип
+                expiring.take(3).forEach { scheme: Scheme ->  // ← явный тип
                     val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
                     appendLine("  • ${scheme.equipmentName} (до ${dateFormat.format(Date(scheme.nextRevisionDate))})")
                 }
@@ -84,5 +86,6 @@ class NotificationWorker(
             .build()
 
         notificationManager.notify(1, notification)
+        android.util.Log.d("NotificationWorker", "Уведомление отправлено: ${message.take(50)}...")
     }
 }

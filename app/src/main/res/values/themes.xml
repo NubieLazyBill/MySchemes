@@ -1,9 +1,25 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.MySchemes" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <!-- Базовая тема приложения -->
+    <style name="Theme.MySchemes" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Основной цвет приложения -->
+        <item name="colorPrimary">#4CAF50</item>
+        <item name="colorPrimaryVariant">#388E3C</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+
+        <!-- Цвета для текста -->
+        <item name="android:textColorPrimary">#2C3E50</item>
+        <item name="android:textColorSecondary">#34495E</item>
+
+        <!-- Цвет тулбара -->
+        <item name="android:statusBarColor">#4CAF50</item>
+
+        <!-- Стиль для текста в выпадающем меню -->
+        <item name="android:itemTextAppearance">@style/MenuTextAppearance</item>
     </style>
 
-    <style name="Theme.MySchemes" parent="Base.Theme.MySchemes" />
+    <!-- Стиль для текста меню -->
+    <style name="MenuTextAppearance" parent="@android:style/TextAppearance.Widget.IconMenu.Item">
+        <item name="android:textColor">#000000</item>
+        <item name="android:textSize">16sp</item>
+    </style>
 </resources>

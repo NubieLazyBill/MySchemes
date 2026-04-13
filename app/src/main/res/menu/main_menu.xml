@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_add_scheme"
+        android:title="➕ Добавить схему"
+        android:icon="@android:drawable/ic_input_add"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_import_csv"
+        android:title="📥 Импорт из CSV"
+        android:icon="@android:drawable/ic_menu_save"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_test_notification"
+        android:title="🔔 Тест уведомления"
+        android:icon="@android:drawable/ic_dialog_info"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_notification_settings"
+        android:title="⚙️ Настройка уведомлений"
+        android:icon="@android:drawable/ic_menu_preferences"
+        app:showAsAction="never" />
+
+</menu>

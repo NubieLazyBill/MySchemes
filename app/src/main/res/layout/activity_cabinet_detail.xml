@@ -414,6 +414,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="🗑️ Удалить схему"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:padding="12dp"
             android:backgroundTint="#F44336"
             style="@style/Widget.Material3.Button.OutlinedButton" />
 
