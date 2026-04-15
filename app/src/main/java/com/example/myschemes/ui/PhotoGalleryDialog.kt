@@ -117,7 +117,8 @@ class PhotoGalleryDialog(
         private val photoList: List<String>
     ) : BaseAdapter() {
 
-        private val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
+        // Формат только даты (без времени)
+        private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
         override fun getCount(): Int = photoList.size
 
@@ -132,14 +133,14 @@ class PhotoGalleryDialog(
             val text1 = view.findViewById<TextView>(android.R.id.text1)
             val photoPath = photoList[position]
 
-            // Название = дата создания файла
+            // Название = дата создания файла (только дата, без времени)
             val fileName = if (photoPath.startsWith("content://")) {
                 "Фото из галереи"
             } else {
                 val file = File(photoPath)
                 if (file.exists()) {
                     val lastModified = Date(file.lastModified())
-                    dateFormat.format(lastModified)
+                    dateFormat.format(lastModified)  // только дата
                 } else {
                     "Фото"
                 }
@@ -147,12 +148,14 @@ class PhotoGalleryDialog(
 
             text1.text = fileName
 
-            // Загружаем миниатюру
+            // Загружаем миниатюру (увеличенная в 2 раза: 320x240 вместо 160x120)
             loadThumbnail(photoPath) { bitmap ->
                 val drawable = android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
-                drawable.setBounds(0, 0, 160, 120)  // увеличенная миниатюра 160x120
+                drawable.setBounds(0, 0, 320, 240)  // увеличенная миниатюра 320x240 (в 2 раза больше)
                 text1.setCompoundDrawables(drawable, null, null, null)
                 text1.compoundDrawablePadding = 20
+                // Увеличиваем высоту строки, чтобы поместилась миниатюра
+                text1.minHeight = 260
             }
 
             return view
@@ -163,14 +166,14 @@ class PhotoGalleryDialog(
                 val bitmap = if (photoPath.startsWith("content://")) {
                     val uri = Uri.parse(photoPath)
                     context.contentResolver.openInputStream(uri)?.use { stream ->
-                        android.graphics.BitmapFactory.decodeStream(stream)
+                        BitmapFactory.decodeStream(stream)
                     }
                 } else {
                     val file = File(photoPath)
                     if (file.exists()) {
-                        val options = android.graphics.BitmapFactory.Options()
-                        options.inSampleSize = 3  // уменьшаем для миниатюры
-                        android.graphics.BitmapFactory.decodeFile(photoPath, options)
+                        val options = BitmapFactory.Options()
+                        options.inSampleSize = 2  // уменьшаем меньше для лучшего качества
+                        BitmapFactory.decodeFile(photoPath, options)
                     } else null
                 }
                 bitmap?.let {

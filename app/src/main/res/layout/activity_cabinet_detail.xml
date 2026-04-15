@@ -87,7 +87,7 @@
                 android:inputType="date" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Чек-лист с фото -->
+        <!-- Чек-лист с выпадающими списками -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -115,15 +115,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbCabinetNameChecked"
+                    <Spinner
+                        android:id="@+id/spinnerCabinetName"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="📛 Диспетчерское наименование"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnCabinetNameNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnCabinetNamePhoto"
@@ -132,6 +147,7 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
                 <!-- 2. ДН автоматов, рубильников -->
@@ -139,15 +155,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbSwitchesNameChecked"
+                    <Spinner
+                        android:id="@+id/spinnerSwitchesName"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="🔌 ДН автоматов, рубильников"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnSwitchesNameNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnSwitchesNamePhoto"
@@ -156,6 +187,7 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
                 <!-- 3. Инвентарный номер -->
@@ -163,15 +195,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbInventoryNumberChecked"
+                    <Spinner
+                        android:id="@+id/spinnerInventoryNumber"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="🔢 Инвентарный номер"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnInventoryNumberNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnInventoryNumberPhoto"
@@ -180,6 +227,7 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
                 <View
@@ -193,15 +241,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbLockIntegrity"
+                    <Spinner
+                        android:id="@+id/spinnerLockIntegrity"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="🔒 Целостность замков"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnLockIntegrityNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnLockIntegrityPhoto"
@@ -210,6 +273,7 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
                 <!-- 5. Уплотнение шкафа -->
@@ -217,15 +281,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbSealIntegrity"
+                    <Spinner
+                        android:id="@+id/spinnerSealIntegrity"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="📦 Уплотнение шкафа"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnSealIntegrityNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnSealIntegrityPhoto"
@@ -234,6 +313,7 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
                 <!-- 6. Заходы кабелей -->
@@ -241,15 +321,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbCableEntries"
+                    <Spinner
+                        android:id="@+id/spinnerCableEntries"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="🔌 Заходы кабелей в защите"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnCableEntriesNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnCableEntriesPhoto"
@@ -258,6 +353,7 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
                 <!-- 7. Нет оголённых жил -->
@@ -265,15 +361,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbNoBareWires"
+                    <Spinner
+                        android:id="@+id/spinnerNoBareWires"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="⚡ Нет оголённых жил"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnNoBareWiresNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnNoBareWiresPhoto"
@@ -282,6 +393,7 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
                 <!-- 8. Адресные бирки -->
@@ -289,15 +401,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbAddressLabels"
+                    <Spinner
+                        android:id="@+id/spinnerAddressLabels"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="🏷️ Адресные бирки"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnAddressLabelsNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnAddressLabelsPhoto"
@@ -306,6 +433,7 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
                 <!-- 9. Целостность клеммников -->
@@ -313,15 +441,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbTerminalsIntegrity"
+                    <Spinner
+                        android:id="@+id/spinnerTerminalsIntegrity"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="🔧 Целостность клеммников"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnTerminalsIntegrityNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnTerminalsIntegrityPhoto"
@@ -330,6 +473,7 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
                 <!-- 10. Окраска -->
@@ -337,15 +481,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbPainting"
+                    <Spinner
+                        android:id="@+id/spinnerPainting"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="🎨 Окраска"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnPaintingNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnPaintingPhoto"
@@ -354,6 +513,7 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
                 <!-- 11. Обогрев -->
@@ -361,15 +521,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbHeating"
+                    <Spinner
+                        android:id="@+id/spinnerHeating"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="🔥 Обогрев"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnHeatingNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnHeatingPhoto"
@@ -378,6 +553,7 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
                 <!-- 12. Заземление -->
@@ -385,15 +561,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
 
-                    <CheckBox
-                        android:id="@+id/cbGrounding"
+                    <Spinner
+                        android:id="@+id/spinnerGrounding"
+                        android:layout_width="60dp"
+                        android:layout_height="48dp"
+                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="⛓️ Заземление"
-                        android:padding="8dp" />
+                        android:padding="8dp"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnGroundingNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
 
                     <ImageButton
                         android:id="@+id/btnGroundingPhoto"
@@ -402,13 +593,14 @@
                         android:src="@android:drawable/ic_menu_camera"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp" />
+
                 </LinearLayout>
 
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Кнопка удаления (возврат - через стрелку системы) -->
+        <!-- Кнопка удаления -->
         <Button
             android:id="@+id/btnDelete"
             android:layout_width="match_parent"

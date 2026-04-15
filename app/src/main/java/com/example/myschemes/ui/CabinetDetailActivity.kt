@@ -3,6 +3,7 @@ package com.example.myschemes.ui
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -11,13 +12,13 @@ import com.example.myschemes.R
 import com.example.myschemes.data.database.SchemeDatabase
 import com.example.myschemes.data.model.Scheme
 import com.example.myschemes.data.repository.SchemeRepository
+import com.example.myschemes.utils.FileHelper
 import com.example.myschemes.utils.PhotoHelper
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import com.example.myschemes.utils.FileHelper
 
 class CabinetDetailActivity : AppCompatActivity() {
 
@@ -32,19 +33,33 @@ class CabinetDetailActivity : AppCompatActivity() {
     private lateinit var etEditLastRevisionDate: TextInputEditText
     private lateinit var etEditNextRevisionDate: TextInputEditText
 
-    // Чек-боксы
-    private lateinit var cbCabinetNameChecked: CheckBox
-    private lateinit var cbSwitchesNameChecked: CheckBox
-    private lateinit var cbInventoryNumberChecked: CheckBox
-    private lateinit var cbLockIntegrity: CheckBox
-    private lateinit var cbSealIntegrity: CheckBox
-    private lateinit var cbCableEntries: CheckBox
-    private lateinit var cbNoBareWires: CheckBox
-    private lateinit var cbAddressLabels: CheckBox
-    private lateinit var cbTerminalsIntegrity: CheckBox
-    private lateinit var cbPainting: CheckBox
-    private lateinit var cbHeating: CheckBox
-    private lateinit var cbGrounding: CheckBox
+    // Spinner'ы для чек-листа
+    private lateinit var spinnerCabinetName: Spinner
+    private lateinit var spinnerSwitchesName: Spinner
+    private lateinit var spinnerInventoryNumber: Spinner
+    private lateinit var spinnerLockIntegrity: Spinner
+    private lateinit var spinnerSealIntegrity: Spinner
+    private lateinit var spinnerCableEntries: Spinner
+    private lateinit var spinnerNoBareWires: Spinner
+    private lateinit var spinnerAddressLabels: Spinner
+    private lateinit var spinnerTerminalsIntegrity: Spinner
+    private lateinit var spinnerPainting: Spinner
+    private lateinit var spinnerHeating: Spinner
+    private lateinit var spinnerGrounding: Spinner
+
+    // Кнопки примечаний
+    private lateinit var btnCabinetNameNote: ImageButton
+    private lateinit var btnSwitchesNameNote: ImageButton
+    private lateinit var btnInventoryNumberNote: ImageButton
+    private lateinit var btnLockIntegrityNote: ImageButton
+    private lateinit var btnSealIntegrityNote: ImageButton
+    private lateinit var btnCableEntriesNote: ImageButton
+    private lateinit var btnNoBareWiresNote: ImageButton
+    private lateinit var btnAddressLabelsNote: ImageButton
+    private lateinit var btnTerminalsIntegrityNote: ImageButton
+    private lateinit var btnPaintingNote: ImageButton
+    private lateinit var btnHeatingNote: ImageButton
+    private lateinit var btnGroundingNote: ImageButton
 
     // Кнопки фото
     private lateinit var btnCabinetNamePhoto: ImageButton
@@ -71,7 +86,12 @@ class CabinetDetailActivity : AppCompatActivity() {
     // Хранилище списков фото для каждого пункта
     private val photosMap = mutableMapOf<String, MutableList<String>>()
 
-    // Храним текущий открытый диалог для передачи результатов
+    // Хранилище статусов для каждого пункта (0=Норма, 1=Замечания, 2=Не соответствует)
+    private val statusMap = mutableMapOf<String, Int>()
+
+    // Хранилище примечаний для каждого пункта
+    private val notesMap = mutableMapOf<String, String?>()
+
     private var currentPhotoDialog: PhotoGalleryDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,7 +100,8 @@ class CabinetDetailActivity : AppCompatActivity() {
 
         photoHelper = PhotoHelper(this)
         initViews()
-        initPhotosMap()
+        initMaps()
+        setupSpinners()
         setupListeners()
 
         schemeId = intent.getIntExtra("scheme_id", 0)
@@ -99,19 +120,35 @@ class CabinetDetailActivity : AppCompatActivity() {
         etEditLastRevisionDate = findViewById(R.id.etLastRevisionDate)
         etEditNextRevisionDate = findViewById(R.id.etNextRevisionDate)
 
-        cbCabinetNameChecked = findViewById(R.id.cbCabinetNameChecked)
-        cbSwitchesNameChecked = findViewById(R.id.cbSwitchesNameChecked)
-        cbInventoryNumberChecked = findViewById(R.id.cbInventoryNumberChecked)
-        cbLockIntegrity = findViewById(R.id.cbLockIntegrity)
-        cbSealIntegrity = findViewById(R.id.cbSealIntegrity)
-        cbCableEntries = findViewById(R.id.cbCableEntries)
-        cbNoBareWires = findViewById(R.id.cbNoBareWires)
-        cbAddressLabels = findViewById(R.id.cbAddressLabels)
-        cbTerminalsIntegrity = findViewById(R.id.cbTerminalsIntegrity)
-        cbPainting = findViewById(R.id.cbPainting)
-        cbHeating = findViewById(R.id.cbHeating)
-        cbGrounding = findViewById(R.id.cbGrounding)
+        // Spinner'ы
+        spinnerCabinetName = findViewById(R.id.spinnerCabinetName)
+        spinnerSwitchesName = findViewById(R.id.spinnerSwitchesName)
+        spinnerInventoryNumber = findViewById(R.id.spinnerInventoryNumber)
+        spinnerLockIntegrity = findViewById(R.id.spinnerLockIntegrity)
+        spinnerSealIntegrity = findViewById(R.id.spinnerSealIntegrity)
+        spinnerCableEntries = findViewById(R.id.spinnerCableEntries)
+        spinnerNoBareWires = findViewById(R.id.spinnerNoBareWires)
+        spinnerAddressLabels = findViewById(R.id.spinnerAddressLabels)
+        spinnerTerminalsIntegrity = findViewById(R.id.spinnerTerminalsIntegrity)
+        spinnerPainting = findViewById(R.id.spinnerPainting)
+        spinnerHeating = findViewById(R.id.spinnerHeating)
+        spinnerGrounding = findViewById(R.id.spinnerGrounding)
 
+        // Кнопки примечаний
+        btnCabinetNameNote = findViewById(R.id.btnCabinetNameNote)
+        btnSwitchesNameNote = findViewById(R.id.btnSwitchesNameNote)
+        btnInventoryNumberNote = findViewById(R.id.btnInventoryNumberNote)
+        btnLockIntegrityNote = findViewById(R.id.btnLockIntegrityNote)
+        btnSealIntegrityNote = findViewById(R.id.btnSealIntegrityNote)
+        btnCableEntriesNote = findViewById(R.id.btnCableEntriesNote)
+        btnNoBareWiresNote = findViewById(R.id.btnNoBareWiresNote)
+        btnAddressLabelsNote = findViewById(R.id.btnAddressLabelsNote)
+        btnTerminalsIntegrityNote = findViewById(R.id.btnTerminalsIntegrityNote)
+        btnPaintingNote = findViewById(R.id.btnPaintingNote)
+        btnHeatingNote = findViewById(R.id.btnHeatingNote)
+        btnGroundingNote = findViewById(R.id.btnGroundingNote)
+
+        // Кнопки фото
         btnCabinetNamePhoto = findViewById(R.id.btnCabinetNamePhoto)
         btnSwitchesNamePhoto = findViewById(R.id.btnSwitchesNamePhoto)
         btnInventoryNumberPhoto = findViewById(R.id.btnInventoryNumberPhoto)
@@ -128,48 +165,90 @@ class CabinetDetailActivity : AppCompatActivity() {
         btnDelete = findViewById(R.id.btnDelete)
     }
 
-    private fun initPhotosMap() {
+    private fun initMaps() {
         val keys = listOf(
             "cabinetName", "switchesName", "inventoryNumber",
             "lockIntegrity", "sealIntegrity", "cableEntries",
             "noBareWires", "addressLabels", "terminalsIntegrity",
             "painting", "heating", "grounding"
         )
-        keys.forEach { photosMap[it] = mutableListOf() }
+        keys.forEach {
+            photosMap[it] = mutableListOf()
+            statusMap[it] = 0  // по умолчанию "Норма"
+            notesMap[it] = null
+        }
+    }
+
+    private fun setupSpinners() {
+        val statusItems = listOf(
+            StatusItem("✅", "Норма", 0),
+            StatusItem("⚠️", "Есть замечания", 1),
+            StatusItem("❌", "Не соответствует", 2)
+        )
+
+        val adapter = StatusSpinnerAdapter(this, statusItems)
+
+        val spinners = listOf(
+            spinnerCabinetName, spinnerSwitchesName, spinnerInventoryNumber,
+            spinnerLockIntegrity, spinnerSealIntegrity, spinnerCableEntries,
+            spinnerNoBareWires, spinnerAddressLabels, spinnerTerminalsIntegrity,
+            spinnerPainting, spinnerHeating, spinnerGrounding
+        )
+
+        spinners.forEach { spinner ->
+            spinner.adapter = adapter
+            spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    if (!isLoading) {
+                        val key = when (spinner.id) {
+                            R.id.spinnerCabinetName -> "cabinetName"
+                            R.id.spinnerSwitchesName -> "switchesName"
+                            R.id.spinnerInventoryNumber -> "inventoryNumber"
+                            R.id.spinnerLockIntegrity -> "lockIntegrity"
+                            R.id.spinnerSealIntegrity -> "sealIntegrity"
+                            R.id.spinnerCableEntries -> "cableEntries"
+                            R.id.spinnerNoBareWires -> "noBareWires"
+                            R.id.spinnerAddressLabels -> "addressLabels"
+                            R.id.spinnerTerminalsIntegrity -> "terminalsIntegrity"
+                            R.id.spinnerPainting -> "painting"
+                            R.id.spinnerHeating -> "heating"
+                            else -> "grounding"
+                        }
+                        statusMap[key] = position
+                        autoSave()
+                    }
+                }
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
+        }
     }
 
     private fun setupListeners() {
-        // Автосохранение при изменении текстовых полей
         val textWatcher = object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {
                 if (!isLoading) autoSave()
             }
-
         }
 
         etSchemeNumber.addTextChangedListener(textWatcher)
         etEditLastRevisionDate.addTextChangedListener(textWatcher)
         etEditNextRevisionDate.addTextChangedListener(textWatcher)
 
-        // Автосохранение при изменении чек-боксов
-        val checkBoxListener = android.widget.CompoundButton.OnCheckedChangeListener { _, _ ->
-            if (!isLoading) autoSave()
-        }
-
-        cbCabinetNameChecked.setOnCheckedChangeListener(checkBoxListener)
-        cbSwitchesNameChecked.setOnCheckedChangeListener(checkBoxListener)
-        cbInventoryNumberChecked.setOnCheckedChangeListener(checkBoxListener)
-        cbLockIntegrity.setOnCheckedChangeListener(checkBoxListener)
-        cbSealIntegrity.setOnCheckedChangeListener(checkBoxListener)
-        cbCableEntries.setOnCheckedChangeListener(checkBoxListener)
-        cbNoBareWires.setOnCheckedChangeListener(checkBoxListener)
-        cbAddressLabels.setOnCheckedChangeListener(checkBoxListener)
-        cbTerminalsIntegrity.setOnCheckedChangeListener(checkBoxListener)
-        cbPainting.setOnCheckedChangeListener(checkBoxListener)
-        cbHeating.setOnCheckedChangeListener(checkBoxListener)
-        cbGrounding.setOnCheckedChangeListener(checkBoxListener)
+        // Кнопки примечаний
+        btnCabinetNameNote.setOnClickListener { showNoteDialog("cabinetName", "Диспетчерское наименование") }
+        btnSwitchesNameNote.setOnClickListener { showNoteDialog("switchesName", "ДН автоматов, рубильников") }
+        btnInventoryNumberNote.setOnClickListener { showNoteDialog("inventoryNumber", "Инвентарный номер") }
+        btnLockIntegrityNote.setOnClickListener { showNoteDialog("lockIntegrity", "Целостность замков") }
+        btnSealIntegrityNote.setOnClickListener { showNoteDialog("sealIntegrity", "Уплотнение шкафа") }
+        btnCableEntriesNote.setOnClickListener { showNoteDialog("cableEntries", "Заходы кабелей") }
+        btnNoBareWiresNote.setOnClickListener { showNoteDialog("noBareWires", "Оголённые жилы") }
+        btnAddressLabelsNote.setOnClickListener { showNoteDialog("addressLabels", "Адресные бирки") }
+        btnTerminalsIntegrityNote.setOnClickListener { showNoteDialog("terminalsIntegrity", "Клеммники") }
+        btnPaintingNote.setOnClickListener { showNoteDialog("painting", "Окраска") }
+        btnHeatingNote.setOnClickListener { showNoteDialog("heating", "Обогрев") }
+        btnGroundingNote.setOnClickListener { showNoteDialog("grounding", "Заземление") }
 
         // Кнопки фото
         btnCabinetNamePhoto.setOnClickListener { showPhotoGallery("cabinetName", "Диспетчерское наименование") }
@@ -185,10 +264,9 @@ class CabinetDetailActivity : AppCompatActivity() {
         btnHeatingPhoto.setOnClickListener { showPhotoGallery("heating", "Обогрев") }
         btnGroundingPhoto.setOnClickListener { showPhotoGallery("grounding", "Заземление") }
 
-        // Кнопка удаления
         btnDelete.setOnClickListener { confirmDelete() }
 
-        // Автообновление даты следующего пересмотра при изменении даты схемы
+        // Автообновление даты следующего пересмотра
         etEditLastRevisionDate.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -204,17 +282,31 @@ class CabinetDetailActivity : AppCompatActivity() {
                                 add(Calendar.YEAR, 3)
                             }
                             val newNextDate = dateFormat.format(calendar.time)
-                            // Обновляем поле, только если оно не совпадает с текущим
                             if (etEditNextRevisionDate.text.toString() != newNextDate) {
                                 etEditNextRevisionDate.setText(newNextDate)
                             }
                         }
-                    } catch (e: Exception) {
-                        // Невалидная дата, игнорируем
-                    }
+                    } catch (e: Exception) { }
                 }
             }
         })
+    }
+
+    private fun showNoteDialog(key: String, title: String) {
+        val etNote = EditText(this)
+        etNote.setText(notesMap[key] ?: "")
+        etNote.minLines = 3
+        etNote.gravity = android.view.Gravity.TOP
+
+        AlertDialog.Builder(this)
+            .setTitle("📝 Примечание: $title")
+            .setView(etNote)
+            .setPositiveButton("Сохранить") { _, _ ->
+                notesMap[key] = etNote.text.toString().takeIf { it.isNotBlank() }
+                autoSave()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
     }
 
     private fun showPhotoGallery(key: String, title: String) {
@@ -231,14 +323,9 @@ class CabinetDetailActivity : AppCompatActivity() {
     }
 
     private fun autoSave() {
-        if (isLoading) return  // Не сохраняем во время загрузки
+        if (isLoading) return
 
         scheme?.let { s ->
-            android.util.Log.d("CabinetDetail", "=== AUTO SAVE ===")
-            android.util.Log.d("CabinetDetail", "Сохраняем фото cabinetName: ${photosMap["cabinetName"]}")
-            android.util.Log.d("CabinetDetail", "Сохраняем фото switchesName: ${photosMap["switchesName"]}")
-            android.util.Log.d("CabinetDetail", "Сохраняем фото inventoryNumber: ${photosMap["inventoryNumber"]}")
-
             val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
             val schemeNumber = etSchemeNumber.text.toString().takeIf { it.isNotEmpty() }
@@ -257,18 +344,18 @@ class CabinetDetailActivity : AppCompatActivity() {
                 schemeNumber = schemeNumber,
                 lastRevisionDate = lastRevisionDate,
                 nextRevisionDate = nextRevisionDate,
-                cabinetNameChecked = cbCabinetNameChecked.isChecked,
-                switchesNameChecked = cbSwitchesNameChecked.isChecked,
-                inventoryNumberChecked = cbInventoryNumberChecked.isChecked,
-                lockIntegrity = cbLockIntegrity.isChecked,
-                sealIntegrity = cbSealIntegrity.isChecked,
-                cableEntries = cbCableEntries.isChecked,
-                noBareWires = cbNoBareWires.isChecked,
-                addressLabels = cbAddressLabels.isChecked,
-                terminalsIntegrity = cbTerminalsIntegrity.isChecked,
-                painting = cbPainting.isChecked,
-                heating = cbHeating.isChecked,
-                grounding = cbGrounding.isChecked,
+                cabinetNameChecked = statusMap["cabinetName"] == 0,
+                switchesNameChecked = statusMap["switchesName"] == 0,
+                inventoryNumberChecked = statusMap["inventoryNumber"] == 0,
+                lockIntegrity = statusMap["lockIntegrity"] == 0,
+                sealIntegrity = statusMap["sealIntegrity"] == 0,
+                cableEntries = statusMap["cableEntries"] == 0,
+                noBareWires = statusMap["noBareWires"] == 0,
+                addressLabels = statusMap["addressLabels"] == 0,
+                terminalsIntegrity = statusMap["terminalsIntegrity"] == 0,
+                painting = statusMap["painting"] == 0,
+                heating = statusMap["heating"] == 0,
+                grounding = statusMap["grounding"] == 0,
                 cabinetNamePhotos = photosMap["cabinetName"] ?: emptyList(),
                 switchesNamePhotos = photosMap["switchesName"] ?: emptyList(),
                 inventoryNumberPhotos = photosMap["inventoryNumber"] ?: emptyList(),
@@ -289,7 +376,6 @@ class CabinetDetailActivity : AppCompatActivity() {
                 if (index != -1) {
                     allSchemes[index] = updatedScheme
                     repository.saveSchemes(allSchemes)
-                    // Обновляем статус
                     updateStatusDisplay(updatedScheme)
                 }
             }
@@ -311,6 +397,7 @@ class CabinetDetailActivity : AppCompatActivity() {
             scheme?.let { s ->
                 displayData(s)
                 loadPhotos(s)
+                loadStatuses(s)
                 updateStatusDisplay(s)
             }
             isLoading = false
@@ -325,23 +412,42 @@ class CabinetDetailActivity : AppCompatActivity() {
         etSchemeNumber.setText(scheme.schemeNumber ?: "")
         etEditLastRevisionDate.setText(dateFormat.format(Date(scheme.lastRevisionDate)))
         etEditNextRevisionDate.setText(dateFormat.format(Date(scheme.nextRevisionDate)))
+    }
 
-        cbCabinetNameChecked.isChecked = scheme.cabinetNameChecked
-        cbSwitchesNameChecked.isChecked = scheme.switchesNameChecked
-        cbInventoryNumberChecked.isChecked = scheme.inventoryNumberChecked
-        cbLockIntegrity.isChecked = scheme.lockIntegrity
-        cbSealIntegrity.isChecked = scheme.sealIntegrity
-        cbCableEntries.isChecked = scheme.cableEntries
-        cbNoBareWires.isChecked = scheme.noBareWires
-        cbAddressLabels.isChecked = scheme.addressLabels
-        cbTerminalsIntegrity.isChecked = scheme.terminalsIntegrity
-        cbPainting.isChecked = scheme.painting
-        cbHeating.isChecked = scheme.heating
-        cbGrounding.isChecked = scheme.grounding
+    private fun loadStatuses(scheme: Scheme) {
+        statusMap["cabinetName"] = if (scheme.cabinetNameChecked) 0 else 1
+        statusMap["switchesName"] = if (scheme.switchesNameChecked) 0 else 1
+        statusMap["inventoryNumber"] = if (scheme.inventoryNumberChecked) 0 else 1
+        statusMap["lockIntegrity"] = if (scheme.lockIntegrity) 0 else 1
+        statusMap["sealIntegrity"] = if (scheme.sealIntegrity) 0 else 1
+        statusMap["cableEntries"] = if (scheme.cableEntries) 0 else 1
+        statusMap["noBareWires"] = if (scheme.noBareWires) 0 else 1
+        statusMap["addressLabels"] = if (scheme.addressLabels) 0 else 1
+        statusMap["terminalsIntegrity"] = if (scheme.terminalsIntegrity) 0 else 1
+        statusMap["painting"] = if (scheme.painting) 0 else 1
+        statusMap["heating"] = if (scheme.heating) 0 else 1
+        statusMap["grounding"] = if (scheme.grounding) 0 else 1
+
+        // Устанавливаем значения в спиннеры без вызова onItemSelected
+        setSpinnerSelectionWithoutCallback(spinnerCabinetName, statusMap["cabinetName"] ?: 0)
+        setSpinnerSelectionWithoutCallback(spinnerSwitchesName, statusMap["switchesName"] ?: 0)
+        setSpinnerSelectionWithoutCallback(spinnerInventoryNumber, statusMap["inventoryNumber"] ?: 0)
+        setSpinnerSelectionWithoutCallback(spinnerLockIntegrity, statusMap["lockIntegrity"] ?: 0)
+        setSpinnerSelectionWithoutCallback(spinnerSealIntegrity, statusMap["sealIntegrity"] ?: 0)
+        setSpinnerSelectionWithoutCallback(spinnerCableEntries, statusMap["cableEntries"] ?: 0)
+        setSpinnerSelectionWithoutCallback(spinnerNoBareWires, statusMap["noBareWires"] ?: 0)
+        setSpinnerSelectionWithoutCallback(spinnerAddressLabels, statusMap["addressLabels"] ?: 0)
+        setSpinnerSelectionWithoutCallback(spinnerTerminalsIntegrity, statusMap["terminalsIntegrity"] ?: 0)
+        setSpinnerSelectionWithoutCallback(spinnerPainting, statusMap["painting"] ?: 0)
+        setSpinnerSelectionWithoutCallback(spinnerHeating, statusMap["heating"] ?: 0)
+        setSpinnerSelectionWithoutCallback(spinnerGrounding, statusMap["grounding"] ?: 0)
+    }
+
+    private fun setSpinnerSelectionWithoutCallback(spinner: Spinner, position: Int) {
+        spinner.setSelection(position, false)  // false = не вызывать onItemSelected
     }
 
     private fun loadPhotos(scheme: Scheme) {
-        android.util.Log.d("CabinetDetail", "Загрузка фото из схемы: ${scheme.cabinetNamePhotos}")
         photosMap["cabinetName"] = scheme.cabinetNamePhotos.filter { File(it).exists() }.toMutableList()
         photosMap["switchesName"] = scheme.switchesNamePhotos.filter { File(it).exists() }.toMutableList()
         photosMap["inventoryNumber"] = scheme.inventoryNumberPhotos.filter { File(it).exists() }.toMutableList()
@@ -354,8 +460,6 @@ class CabinetDetailActivity : AppCompatActivity() {
         photosMap["painting"] = scheme.paintingPhotos.filter { File(it).exists() }.toMutableList()
         photosMap["heating"] = scheme.heatingPhotos.filter { File(it).exists() }.toMutableList()
         photosMap["grounding"] = scheme.groundingPhotos.filter { File(it).exists() }.toMutableList()
-
-        android.util.Log.d("CabinetDetail", "После фильтрации cabinetName: ${photosMap["cabinetName"]}")
     }
 
     private fun getStatusInfo(nextRevisionDate: Long): Pair<String, Int> {
@@ -381,7 +485,6 @@ class CabinetDetailActivity : AppCompatActivity() {
 
     private fun deleteScheme() {
         lifecycleScope.launch {
-            // Удаляем все фото из хранилища
             photosMap.values.forEach { photoList ->
                 photoList.forEach { photoPath ->
                     FileHelper.deletePhotoFromAppStorage(this@CabinetDetailActivity, photoPath)
@@ -398,7 +501,6 @@ class CabinetDetailActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        android.util.Log.d("CabinetDetail", "onActivityResult: requestCode=$requestCode, resultCode=$resultCode")
         photoHelper.handleActivityResult(requestCode, resultCode, data)
         currentPhotoDialog?.handleActivityResult(requestCode, resultCode, data)
     }

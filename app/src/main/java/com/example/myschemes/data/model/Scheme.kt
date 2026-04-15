@@ -64,3 +64,9 @@ data class Scheme(
 enum class SchemeStatus {
     ACTIVE, EXPIRING, EXPIRED
 }
+
+enum class ChecklistStatus {
+    NORMAL,     // зелёная галочка
+    WARNING,    // жёлтый вопросик
+    FAIL        // красный крестик
+}
