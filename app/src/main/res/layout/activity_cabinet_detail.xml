@@ -130,7 +130,9 @@
                         android:layout_weight="1"
                         android:text="📛 Диспетчерское наименование"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnCabinetNameNote"
@@ -170,7 +172,9 @@
                         android:layout_weight="1"
                         android:text="🔌 ДН автоматов, рубильников"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnSwitchesNameNote"
@@ -210,7 +214,9 @@
                         android:layout_weight="1"
                         android:text="🔢 Инвентарный номер"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnInventoryNumberNote"
@@ -256,7 +262,9 @@
                         android:layout_weight="1"
                         android:text="🔒 Целостность замков"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnLockIntegrityNote"
@@ -296,7 +304,9 @@
                         android:layout_weight="1"
                         android:text="📦 Уплотнение шкафа"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnSealIntegrityNote"
@@ -336,7 +346,9 @@
                         android:layout_weight="1"
                         android:text="🔌 Заходы кабелей в защите"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnCableEntriesNote"
@@ -376,7 +388,9 @@
                         android:layout_weight="1"
                         android:text="⚡ Нет оголённых жил"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnNoBareWiresNote"
@@ -416,7 +430,9 @@
                         android:layout_weight="1"
                         android:text="🏷️ Адресные бирки"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnAddressLabelsNote"
@@ -456,7 +472,9 @@
                         android:layout_weight="1"
                         android:text="🔧 Целостность клеммников"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnTerminalsIntegrityNote"
@@ -496,7 +514,9 @@
                         android:layout_weight="1"
                         android:text="🎨 Окраска"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnPaintingNote"
@@ -536,7 +556,9 @@
                         android:layout_weight="1"
                         android:text="🔥 Обогрев"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnHeatingNote"
@@ -576,7 +598,9 @@
                         android:layout_weight="1"
                         android:text="⛓️ Заземление"
                         android:padding="8dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
 
                     <ImageButton
                         android:id="@+id/btnGroundingNote"
@@ -605,7 +629,7 @@
             android:id="@+id/btnDelete"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🗑️ Удалить схему"
+            android:text="🗑️ Удалить"
             android:textSize="16sp"
             android:textStyle="bold"
             android:padding="12dp"

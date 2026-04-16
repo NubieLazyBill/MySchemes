@@ -9,7 +9,7 @@ import com.example.myschemes.data.model.Scheme
 
 @Database(
     entities = [Scheme::class],
-    version = 4,  // ← увеличили с 3 до 4
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -26,7 +26,9 @@ abstract class SchemeDatabase : RoomDatabase() {
                     context.applicationContext,
                     SchemeDatabase::class.java,
                     "schemes_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()  // ← добавляем эту строку
+                    .build()
                 INSTANCE = instance
                 instance
             }

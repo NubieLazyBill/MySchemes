@@ -2,6 +2,7 @@ package com.example.myschemes.ui
 
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -174,7 +175,7 @@ class CabinetDetailActivity : AppCompatActivity() {
         )
         keys.forEach {
             photosMap[it] = mutableListOf()
-            statusMap[it] = 0  // по умолчанию "Норма"
+            statusMap[it] = 0
             notesMap[it] = null
         }
     }
@@ -367,7 +368,19 @@ class CabinetDetailActivity : AppCompatActivity() {
                 terminalsIntegrityPhotos = photosMap["terminalsIntegrity"] ?: emptyList(),
                 paintingPhotos = photosMap["painting"] ?: emptyList(),
                 heatingPhotos = photosMap["heating"] ?: emptyList(),
-                groundingPhotos = photosMap["grounding"] ?: emptyList()
+                groundingPhotos = photosMap["grounding"] ?: emptyList(),
+                cabinetNameNote = notesMap["cabinetName"],
+                switchesNameNote = notesMap["switchesName"],
+                inventoryNumberNote = notesMap["inventoryNumber"],
+                lockIntegrityNote = notesMap["lockIntegrity"],
+                sealIntegrityNote = notesMap["sealIntegrity"],
+                cableEntriesNote = notesMap["cableEntries"],
+                noBareWiresNote = notesMap["noBareWires"],
+                addressLabelsNote = notesMap["addressLabels"],
+                terminalsIntegrityNote = notesMap["terminalsIntegrity"],
+                paintingNote = notesMap["painting"],
+                heatingNote = notesMap["heating"],
+                groundingNote = notesMap["grounding"]
             )
 
             lifecycleScope.launch {
@@ -398,10 +411,26 @@ class CabinetDetailActivity : AppCompatActivity() {
                 displayData(s)
                 loadPhotos(s)
                 loadStatuses(s)
+                loadNotes(s)
                 updateStatusDisplay(s)
             }
             isLoading = false
         }
+    }
+
+    private fun loadNotes(scheme: Scheme) {
+        notesMap["cabinetName"] = scheme.cabinetNameNote
+        notesMap["switchesName"] = scheme.switchesNameNote
+        notesMap["inventoryNumber"] = scheme.inventoryNumberNote
+        notesMap["lockIntegrity"] = scheme.lockIntegrityNote
+        notesMap["sealIntegrity"] = scheme.sealIntegrityNote
+        notesMap["cableEntries"] = scheme.cableEntriesNote
+        notesMap["noBareWires"] = scheme.noBareWiresNote
+        notesMap["addressLabels"] = scheme.addressLabelsNote
+        notesMap["terminalsIntegrity"] = scheme.terminalsIntegrityNote
+        notesMap["painting"] = scheme.paintingNote
+        notesMap["heating"] = scheme.heatingNote
+        notesMap["grounding"] = scheme.groundingNote
     }
 
     private fun displayData(scheme: Scheme) {
@@ -444,22 +473,35 @@ class CabinetDetailActivity : AppCompatActivity() {
     }
 
     private fun setSpinnerSelectionWithoutCallback(spinner: Spinner, position: Int) {
-        spinner.setSelection(position, false)  // false = не вызывать onItemSelected
+        spinner.setSelection(position, false)
     }
 
     private fun loadPhotos(scheme: Scheme) {
-        photosMap["cabinetName"] = scheme.cabinetNamePhotos.filter { File(it).exists() }.toMutableList()
-        photosMap["switchesName"] = scheme.switchesNamePhotos.filter { File(it).exists() }.toMutableList()
-        photosMap["inventoryNumber"] = scheme.inventoryNumberPhotos.filter { File(it).exists() }.toMutableList()
-        photosMap["lockIntegrity"] = scheme.lockIntegrityPhotos.filter { File(it).exists() }.toMutableList()
-        photosMap["sealIntegrity"] = scheme.sealIntegrityPhotos.filter { File(it).exists() }.toMutableList()
-        photosMap["cableEntries"] = scheme.cableEntriesPhotos.filter { File(it).exists() }.toMutableList()
-        photosMap["noBareWires"] = scheme.noBareWiresPhotos.filter { File(it).exists() }.toMutableList()
-        photosMap["addressLabels"] = scheme.addressLabelsPhotos.filter { File(it).exists() }.toMutableList()
-        photosMap["terminalsIntegrity"] = scheme.terminalsIntegrityPhotos.filter { File(it).exists() }.toMutableList()
-        photosMap["painting"] = scheme.paintingPhotos.filter { File(it).exists() }.toMutableList()
-        photosMap["heating"] = scheme.heatingPhotos.filter { File(it).exists() }.toMutableList()
-        photosMap["grounding"] = scheme.groundingPhotos.filter { File(it).exists() }.toMutableList()
+        photosMap["cabinetName"] = scheme.cabinetNamePhotos.filter { isPhotoExists(it) }.toMutableList()
+        photosMap["switchesName"] = scheme.switchesNamePhotos.filter { isPhotoExists(it) }.toMutableList()
+        photosMap["inventoryNumber"] = scheme.inventoryNumberPhotos.filter { isPhotoExists(it) }.toMutableList()
+        photosMap["lockIntegrity"] = scheme.lockIntegrityPhotos.filter { isPhotoExists(it) }.toMutableList()
+        photosMap["sealIntegrity"] = scheme.sealIntegrityPhotos.filter { isPhotoExists(it) }.toMutableList()
+        photosMap["cableEntries"] = scheme.cableEntriesPhotos.filter { isPhotoExists(it) }.toMutableList()
+        photosMap["noBareWires"] = scheme.noBareWiresPhotos.filter { isPhotoExists(it) }.toMutableList()
+        photosMap["addressLabels"] = scheme.addressLabelsPhotos.filter { isPhotoExists(it) }.toMutableList()
+        photosMap["terminalsIntegrity"] = scheme.terminalsIntegrityPhotos.filter { isPhotoExists(it) }.toMutableList()
+        photosMap["painting"] = scheme.paintingPhotos.filter { isPhotoExists(it) }.toMutableList()
+        photosMap["heating"] = scheme.heatingPhotos.filter { isPhotoExists(it) }.toMutableList()
+        photosMap["grounding"] = scheme.groundingPhotos.filter { isPhotoExists(it) }.toMutableList()
+    }
+
+    private fun isPhotoExists(path: String): Boolean {
+        return if (path.startsWith("content://")) {
+            try {
+                contentResolver.openInputStream(Uri.parse(path))?.close()
+                true
+            } catch (e: Exception) {
+                false
+            }
+        } else {
+            File(path).exists()
+        }
     }
 
     private fun getStatusInfo(nextRevisionDate: Long): Pair<String, Int> {

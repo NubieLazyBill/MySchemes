@@ -47,7 +47,21 @@ data class Scheme(
     val groundingPhotos: List<String> = emptyList(),
 
     // Общее фото шкафа (тоже список)
-    val generalPhotos: List<String> = emptyList()
+    val generalPhotos: List<String> = emptyList(),
+
+    // Примечания для каждого пункта
+    val cabinetNameNote: String? = null,
+    val switchesNameNote: String? = null,
+    val inventoryNumberNote: String? = null,
+    val lockIntegrityNote: String? = null,
+    val sealIntegrityNote: String? = null,
+    val cableEntriesNote: String? = null,
+    val noBareWiresNote: String? = null,
+    val addressLabelsNote: String? = null,
+    val terminalsIntegrityNote: String? = null,
+    val paintingNote: String? = null,
+    val heatingNote: String? = null,
+    val groundingNote: String? = null,
 ) : Serializable {
 
     fun getStatus(): SchemeStatus {

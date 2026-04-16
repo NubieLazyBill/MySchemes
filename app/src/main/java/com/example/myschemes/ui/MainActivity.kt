@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         toolbar.setTitleTextColor(Color.BLACK)
-        supportActionBar?.title = "📋 Мои схемы"
+        supportActionBar?.title = "📋 Мои шкафы"
 
         recyclerView = findViewById(R.id.rvSchemes)
         tvCounter = findViewById(R.id.tvCounter)
@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
         val etLastRevisionDate = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etLastRevisionDate)
 
         AlertDialog.Builder(this)
-            .setTitle("➕ Добавление схемы")
+            .setTitle("➕ Добавить шкаф")
             .setView(dialogView)
             .setPositiveButton("Сохранить") { _, _ ->
                 val equipmentName = etEquipmentName.text.toString().trim()
@@ -139,50 +139,49 @@ class MainActivity : AppCompatActivity() {
                 val lastRevisionDateStr = etLastRevisionDate.text.toString().trim()
 
                 if (equipmentName.isEmpty()) {
-                    Toast.makeText(this, "Введите наименование оборудования", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Введите наименование шкафа", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
 
-                if (lastRevisionDateStr.isEmpty()) {
-                    Toast.makeText(this, "Введите дату схемы", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-
-                try {
-                    val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-                    val lastRevisionDate = dateFormat.parse(lastRevisionDateStr)?.time ?: 0L
-
-                    if (lastRevisionDate == 0L) {
-                        Toast.makeText(this, "Неверный формат даты", Toast.LENGTH_SHORT).show()
-                        return@setPositiveButton
+                // Дата схемы теперь необязательная
+                val lastRevisionDate = if (lastRevisionDateStr.isNotEmpty()) {
+                    try {
+                        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+                        dateFormat.parse(lastRevisionDateStr)?.time ?: 0L
+                    } catch (e: Exception) {
+                        0L
                     }
+                } else {
+                    0L
+                }
 
-                    // Автоматически вычисляем дату следующего пересмотра (+3 года)
+                // Если дата схемы не указана, дата пересмотра тоже будет 0
+                val nextRevisionDate = if (lastRevisionDate != 0L) {
                     val calendar = Calendar.getInstance().apply {
                         timeInMillis = lastRevisionDate
                         add(Calendar.YEAR, 3)
                     }
-                    val nextRevisionDate = calendar.timeInMillis
+                    calendar.timeInMillis
+                } else {
+                    0L
+                }
 
-                    lifecycleScope.launch {
-                        val allSchemes = repository.getAllSchemes().toMutableList()
-                        val newId = (allSchemes.maxOfOrNull { it.id } ?: 0) + 1
-                        val newScheme = Scheme(
-                            id = newId,
-                            itemNumber = allSchemes.size + 1,
-                            cellNumber = cellNumber,
-                            equipmentName = equipmentName,
-                            lastRevisionDate = lastRevisionDate,
-                            nextRevisionDate = nextRevisionDate,
-                            schemeNumber = schemeNumber
-                        )
-                        allSchemes.add(newScheme)
-                        repository.saveSchemes(allSchemes)
-                        loadSchemes()
-                        Toast.makeText(this@MainActivity, "Схема добавлена", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(this, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                lifecycleScope.launch {
+                    val allSchemes = repository.getAllSchemes().toMutableList()
+                    val newId = (allSchemes.maxOfOrNull { it.id } ?: 0) + 1
+                    val newScheme = Scheme(
+                        id = newId,
+                        itemNumber = allSchemes.size + 1,
+                        cellNumber = cellNumber,
+                        equipmentName = equipmentName,
+                        lastRevisionDate = lastRevisionDate,
+                        nextRevisionDate = nextRevisionDate,
+                        schemeNumber = schemeNumber
+                    )
+                    allSchemes.add(newScheme)
+                    repository.saveSchemes(allSchemes)
+                    loadSchemes()
+                    Toast.makeText(this@MainActivity, "Шкаф добавлен", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Отмена", null)
