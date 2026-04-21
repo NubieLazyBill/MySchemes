@@ -29,6 +29,11 @@ import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.appcompat.app.AlertDialog
+import java.io.File
+import org.apache.poi.ss.usermodel.*
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.ss.usermodel.FillPatternType
+import org.apache.poi.ss.usermodel.IndexedColors
 
 class MainActivity : AppCompatActivity() {
 
@@ -97,6 +102,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.action_export_report -> {
+                exportReport()
+                true
+            }
             R.id.action_add_scheme -> {
                 showAddSchemeDialog()
                 true
@@ -289,5 +298,158 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this@MainActivity, "Ошибка импорта: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun exportReport() {
+        lifecycleScope.launch {
+            val schemes = repository.getAllSchemes()
+            if (schemes.isEmpty()) {
+                Toast.makeText(this@MainActivity, "Нет данных для экспорта", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            val excelFile = createExcelFile(schemes)
+            if (excelFile != null) {
+                shareFile(excelFile)
+            } else {
+                Toast.makeText(this@MainActivity, "Ошибка создания файла отчёта", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun createExcelFile(schemes: List<Scheme>): File? {
+        return try {
+            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val fileName = "report_$timeStamp.xlsx"
+            val file = File(cacheDir, fileName)
+
+            val workbook = XSSFWorkbook()
+            val sheet = workbook.createSheet("Шкафы")
+
+            // Стиль для заголовков
+            val headerFont = workbook.createFont().apply {
+                bold = true
+                color = IndexedColors.WHITE.index
+            }
+            val headerStyle = workbook.createCellStyle().apply {
+                fillForegroundColor = IndexedColors.LIGHT_GREEN.index
+                fillPattern = FillPatternType.SOLID_FOREGROUND
+                setFont(headerFont)
+            }
+
+            // Стиль для статусов
+            val plusFont = workbook.createFont().apply {
+                bold = true
+                color = IndexedColors.GREEN.index
+            }
+            val plusStyle = workbook.createCellStyle().apply {
+                setFont(plusFont)
+            }
+
+            val minusFont = workbook.createFont().apply {
+                bold = true
+                color = IndexedColors.RED.index
+            }
+            val minusStyle = workbook.createCellStyle().apply {
+                setFont(minusFont)
+            }
+
+            // Заголовки (новый порядок: сначала чек-лист, потом схема)
+            val headers = listOf(
+                "Наименование оборудования",
+                "Ячейка",
+                "Диспетчерское наименование",
+                "ДН автоматов, рубильников",
+                "Инвентарный номер",
+                "Целостность замков",
+                "Уплотнение шкафа",
+                "Заходы кабелей",
+                "Нет оголённых жил",
+                "Адресные бирки",
+                "Целостность клеммников",
+                "Окраска",
+                "Обогрев",
+                "Заземление",
+                "Примечание",
+                "Номер схемы",
+                "Дата схемы",
+                "Дата пересмотра"
+            )
+
+            val headerRow = sheet.createRow(0)
+            headers.forEachIndexed { index, header ->
+                val cell = headerRow.createCell(index)
+                cell.setCellValue(header)
+                cell.cellStyle = headerStyle
+                sheet.setColumnWidth(index, (header.length * 256).coerceIn(3000, 15000))
+            }
+
+            // Данные
+            schemes.forEachIndexed { rowIndex, scheme ->
+                val row = sheet.createRow(rowIndex + 1)
+                var colIndex = 0
+
+                // Основные поля
+                row.createCell(colIndex++).setCellValue(scheme.equipmentName)
+                row.createCell(colIndex++).setCellValue(scheme.cellNumber ?: "")
+
+                // Пункты чек-листа (+, -)
+                listOf(
+                    scheme.cabinetNameChecked,
+                    scheme.switchesNameChecked,
+                    scheme.inventoryNumberChecked,
+                    scheme.lockIntegrity,
+                    scheme.sealIntegrity,
+                    scheme.cableEntries,
+                    scheme.noBareWires,
+                    scheme.addressLabels,
+                    scheme.terminalsIntegrity,
+                    scheme.painting,
+                    scheme.heating,
+                    scheme.grounding
+                ).forEach { checked ->
+                    val cell = row.createCell(colIndex++)
+                    cell.setCellValue(if (checked) "+" else "-")
+                    cell.cellStyle = if (checked) plusStyle else minusStyle
+                }
+
+                // Примечание (объединяем все заметки)
+                val notes = listOfNotNull(
+                    scheme.cabinetNameNote, scheme.switchesNameNote, scheme.inventoryNumberNote,
+                    scheme.lockIntegrityNote, scheme.sealIntegrityNote, scheme.cableEntriesNote,
+                    scheme.noBareWiresNote, scheme.addressLabelsNote, scheme.terminalsIntegrityNote,
+                    scheme.paintingNote, scheme.heatingNote, scheme.groundingNote
+                ).filter { it.isNotBlank() }
+                row.createCell(colIndex++).setCellValue(notes.joinToString("; "))
+
+                // Поля схемы (в конец)
+                row.createCell(colIndex++).setCellValue(scheme.schemeNumber ?: "")
+                row.createCell(colIndex++).setCellValue(if (scheme.lastRevisionDate != 0L) dateFormat.format(Date(scheme.lastRevisionDate)) else "")
+                row.createCell(colIndex).setCellValue(if (scheme.nextRevisionDate != 0L) dateFormat.format(Date(scheme.nextRevisionDate)) else "")
+            }
+
+            workbook.write(file.outputStream())
+            workbook.close()
+
+            file
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun shareFile(file: File) {
+        val uri = androidx.core.content.FileProvider.getUriForFile(
+            this,
+            "${packageName}.fileprovider",
+            file
+        )
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, "Сохранить отчёт"))
     }
 }

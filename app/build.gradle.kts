@@ -10,10 +10,10 @@ android {
 
     defaultConfig {
         applicationId = "com.example.myschemes"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "2.4.0"
+        versionName = "2.4.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -62,4 +62,6 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
+
+    implementation("org.apache.poi:poi-ooxml:5.2.5")
 }

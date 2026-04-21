@@ -15,6 +15,12 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_export_report"
+        android:title="📊 Создать отчёт"
+        android:icon="@android:drawable/ic_menu_share"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_test_notification"
         android:title="🔔 Тест уведомления"
         android:icon="@android:drawable/ic_dialog_info"
