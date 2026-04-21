@@ -10,7 +10,7 @@ import java.io.Serializable
 @TypeConverters(Converters::class)
 data class Scheme(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    var id: Int = 0,
     val itemNumber: Int? = null,
     val cellNumber: String? = null,
     val equipmentName: String,

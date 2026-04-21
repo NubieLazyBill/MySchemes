@@ -15,6 +15,12 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_import_excel"
+        android:title="📂 Импорт из Excel (добавить)"
+        android:icon="@android:drawable/ic_menu_upload"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_export_report"
         android:title="📊 Создать отчёт"
         android:icon="@android:drawable/ic_menu_share"

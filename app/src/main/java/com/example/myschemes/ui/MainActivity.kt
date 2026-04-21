@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -34,6 +35,8 @@ import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
+import androidx.activity.result.contract.ActivityResultContracts
+import org.apache.poi.ss.usermodel.CellType
 
 class MainActivity : AppCompatActivity() {
 
@@ -42,6 +45,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvCounter: TextView
     private lateinit var tvEmpty: TextView
     private lateinit var repository: SchemeRepository
+
+    companion object {
+        private const val REQUEST_IMPORT_EXCEL = 1002
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,6 +109,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.action_import_excel -> {
+                importFromExcel()
+                true
+            }
             R.id.action_export_report -> {
                 exportReport()
                 true
@@ -451,5 +462,91 @@ class MainActivity : AppCompatActivity() {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         startActivity(Intent.createChooser(intent, "Сохранить отчёт"))
+    }
+
+    //Иморт из Excell
+    private fun importFromExcel() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        startActivityForResult(Intent.createChooser(intent, "Выберите Excel-файл"), REQUEST_IMPORT_EXCEL)
+    }
+
+    private fun processExcelImport(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                val existingSchemes = repository.getAllSchemes()
+                val existingNames = existingSchemes.map { it.equipmentName }.toSet()
+
+                val newSchemes = mutableListOf<Scheme>()
+                var nextId = (existingSchemes.maxOfOrNull { it.id } ?: 0) + 1  // ← var вместо val
+                var nextItemNumber = (existingSchemes.maxOfOrNull { it.itemNumber ?: 0 } ?: 0) + 1  // ← var вместо val
+
+                contentResolver.openInputStream(uri)?.use { inputStream ->
+                    val workbook = XSSFWorkbook(inputStream)
+                    val sheet = workbook.getSheetAt(0)
+
+                    var rowIndex = 0
+                    for (row in sheet) {
+                        rowIndex++
+                        //Пропускаем первую строку (заголовки)
+                        //if (rowIndex == 1) continue // пропускаем заголовки
+
+                        val cellNumberCell = row.getCell(0)
+                        val equipmentNameCell = row.getCell(1)
+
+                        val cellNumber = when (cellNumberCell?.cellType) {
+                            CellType.STRING -> cellNumberCell.stringCellValue.trim().takeIf { it.isNotBlank() }
+                            else -> null
+                        }
+
+                        val equipmentName = when (equipmentNameCell?.cellType) {
+                            CellType.STRING -> equipmentNameCell.stringCellValue.trim()
+                            else -> continue
+                        }
+
+                        if (equipmentName.isEmpty()) continue
+                        if (existingNames.contains(equipmentName)) continue
+
+                        newSchemes.add(
+                            Scheme(
+                                id = nextId,
+                                itemNumber = nextItemNumber,
+                                cellNumber = cellNumber,
+                                equipmentName = equipmentName,
+                                lastRevisionDate = 0L,
+                                nextRevisionDate = 0L,
+                                schemeNumber = null
+                            )
+                        )
+                        nextId++
+                        nextItemNumber++
+                    }
+                    workbook.close()
+                }
+
+                if (newSchemes.isNotEmpty()) {
+                    val allSchemes = existingSchemes.toMutableList()
+                    allSchemes.addAll(newSchemes)
+                    repository.saveSchemes(allSchemes)
+                    loadSchemes()
+                    Toast.makeText(this@MainActivity, "Добавлено ${newSchemes.size} новых шкафов", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Нет новых шкафов для добавления", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this@MainActivity, "Ошибка импорта: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_IMPORT_EXCEL && resultCode == RESULT_OK) {
+            data?.data?.let { uri ->
+                processExcelImport(uri)
+            }
+        }
     }
 }
