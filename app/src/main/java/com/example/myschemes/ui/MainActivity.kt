@@ -45,6 +45,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvCounter: TextView
     private lateinit var tvEmpty: TextView
     private lateinit var repository: SchemeRepository
+    private var currentSortMode = 0
 
     companion object {
         private const val REQUEST_IMPORT_EXCEL = 1002
@@ -111,6 +112,10 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_import_excel -> {
                 importFromExcel()
+                true
+            }
+            R.id.action_sort -> {
+                showSortDialog()
                 true
             }
             R.id.action_export_report -> {
@@ -259,15 +264,17 @@ class MainActivity : AppCompatActivity() {
     private fun loadSchemes() {
         lifecycleScope.launch {
             val schemes = repository.getAllSchemes()
-            if (schemes.isEmpty()) {
+            val sortedSchemes = sortSchemes(schemes)
+
+            if (sortedSchemes.isEmpty()) {
                 recyclerView.visibility = android.view.View.GONE
                 tvEmpty.visibility = android.view.View.VISIBLE
-                tvCounter.text = "Всего схем: 0"
+                tvCounter.text = "Всего шкафов: 0"
             } else {
                 recyclerView.visibility = android.view.View.VISIBLE
                 tvEmpty.visibility = android.view.View.GONE
-                adapter.updateData(schemes)
-                tvCounter.text = "Всего схем: ${schemes.size}"
+                adapter.updateData(sortedSchemes)
+                tvCounter.text = "Всего шкафов: ${sortedSchemes.size}"
             }
         }
     }
@@ -330,9 +337,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun createExcelFile(schemes: List<Scheme>): File? {
         return try {
-            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val fileName = "report_$timeStamp.xlsx"
+            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())  // ← объявляем в самом начале
+            val timeStamp = SimpleDateFormat("dd.MM.yyyy_HH-mm", Locale.getDefault()).format(Date())
+            val fileName = "Осмотр ШКС_$timeStamp.xlsx"
             val file = File(cacheDir, fileName)
 
             val workbook = XSSFWorkbook()
@@ -366,7 +373,7 @@ class MainActivity : AppCompatActivity() {
                 setFont(minusFont)
             }
 
-            // Заголовки (новый порядок: сначала чек-лист, потом схема)
+            // Заголовки
             val headers = listOf(
                 "Наименование оборудования",
                 "Ячейка",
@@ -405,7 +412,7 @@ class MainActivity : AppCompatActivity() {
                 row.createCell(colIndex++).setCellValue(scheme.equipmentName)
                 row.createCell(colIndex++).setCellValue(scheme.cellNumber ?: "")
 
-                // Пункты чек-листа (+, -)
+                // Пункты чек-листа
                 listOf(
                     scheme.cabinetNameChecked,
                     scheme.switchesNameChecked,
@@ -425,7 +432,7 @@ class MainActivity : AppCompatActivity() {
                     cell.cellStyle = if (checked) plusStyle else minusStyle
                 }
 
-                // Примечание (объединяем все заметки)
+                // Примечание
                 val notes = listOfNotNull(
                     scheme.cabinetNameNote, scheme.switchesNameNote, scheme.inventoryNumberNote,
                     scheme.lockIntegrityNote, scheme.sealIntegrityNote, scheme.cableEntriesNote,
@@ -549,4 +556,41 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+    private fun showSortDialog() {
+        val sortOptions = arrayOf(
+            "📛 По наименованию (А-Я)",
+            "📅 По дате пересмотра (сначала срочные)",
+            "🔴 По статусу (просрочены → скоро → активны → нет схемы)",
+            "🗄️ По ячейке"
+        )
+
+        AlertDialog.Builder(this)
+            .setTitle("Сортировка")
+            .setItems(sortOptions) { _, which ->
+                currentSortMode = which
+                loadSchemes()
+            }
+            .show()
+    }
+
+    private fun sortSchemes(schemes: List<Scheme>): List<Scheme> {
+        return when (currentSortMode) {
+            0 -> schemes.sortedBy { it.equipmentName.lowercase() }
+            1 -> schemes.sortedBy {
+                if (it.nextRevisionDate == 0L) Long.MAX_VALUE else it.nextRevisionDate
+            }
+            2 -> schemes.sortedWith(compareBy(
+                { it.getStatus().ordinal },
+                { it.equipmentName.lowercase() }
+            ))
+            3 -> schemes.sortedWith(compareBy(
+                { it.cellNumber ?: "" },
+                { it.equipmentName.lowercase() }
+            ))
+            else -> schemes
+        }
+    }
+
+
+
 }

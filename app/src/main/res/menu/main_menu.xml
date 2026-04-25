@@ -9,6 +9,12 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_sort"
+        android:title="📊 Сортировка"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/action_import_csv"
         android:title="📥 Импорт из CSV"
         android:icon="@android:drawable/ic_menu_save"

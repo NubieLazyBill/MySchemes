@@ -46,19 +46,43 @@ class SchemeAdapter(
 
             tvEquipmentName.text = scheme.equipmentName
             tvCellNumber.text = "Ячейка: ${scheme.cellNumber ?: "—"}"
-            tvNextRevisionDate.text = dateFormat.format(Date(scheme.nextRevisionDate))
 
-            val (statusText, bgColor, textColor) = getStatusInfo(scheme.nextRevisionDate)
+            // Показываем дату только если есть схема и дата не 0
+            if (scheme.hasScheme && scheme.nextRevisionDate != 0L) {
+                tvNextRevisionDate.text = dateFormat.format(Date(scheme.nextRevisionDate))
+            } else {
+                tvNextRevisionDate.text = "—"
+            }
+            tvNextRevisionDate.visibility = if (scheme.hasScheme) View.VISIBLE else View.GONE
+
+            val (statusText, bgColor, textColor) = getStatusInfo(scheme)
             tvStatus.text = statusText
             tvStatus.setBackgroundColor(bgColor)
-            tvStatus.setTextColor(textColor)  // ← применяем цвет текста
+            tvStatus.setTextColor(textColor)
 
             cardView.setOnClickListener { onItemClick(scheme) }
         }
 
-        private fun getStatusInfo(nextRevisionDate: Long): Triple<String, Int, Int> {
+        private fun getStatusInfo(scheme: Scheme): Triple<String, Int, Int> {
+            // Если схема не требуется
+            if (!scheme.hasScheme) {
+                return Triple(
+                    "📄 Не требуется",
+                    Color.parseColor("#EEEEEE"),
+                    Color.parseColor("#999999")
+                )
+            }
+            // Если схема есть, но даты не заполнены
+            if (scheme.lastRevisionDate == 0L || scheme.nextRevisionDate == 0L) {
+                return Triple(
+                    "📄 Нет схемы",
+                    Color.parseColor("#EEEEEE"),
+                    Color.parseColor("#999999")
+                )
+            }
+
             val today = System.currentTimeMillis()
-            val daysLeft = ((nextRevisionDate - today) / (1000 * 60 * 60 * 24)).toInt()
+            val daysLeft = ((scheme.nextRevisionDate - today) / (1000 * 60 * 60 * 24)).toInt()
             return when {
                 daysLeft < 0 -> Triple(
                     "🔴 Просрочено",

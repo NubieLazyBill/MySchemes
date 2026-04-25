@@ -11,44 +11,90 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Заголовок с названием оборудования и статусом -->
+        <!-- Заголовок с названием оборудования, статусом и кнопкой переименования -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            android:orientation="vertical"
             android:layout_marginBottom="16dp">
 
-            <TextView
-                android:id="@+id/tvTitle"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#2C3E50" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
+                <TextView
+                    android:id="@+id/tvTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#2C3E50" />
+
+                <ImageButton
+                    android:id="@+id/btnRename"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_menu_edit"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Переименовать" />
+
+            </LinearLayout>
+
+            <!-- Ячейка (просто текст, не редактируемый) -->
             <TextView
-                android:id="@+id/tvStatus"
+                android:id="@+id/tvCellNumberLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="6dp"
+                android:text="Ячейка: —"
                 android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textColor="#666"
+                android:layout_marginTop="4dp" />
+
+            <!-- Переключатель наличия схемы и статус -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Наличие схемы: "
+                        android:textSize="14sp" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switchHasScheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="6dp"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Редактируемые поля -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="✏️ Редактирование"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp" />
-
+        <!-- Поля схемы (видны только если есть схема) -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilSchemeNumber"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
@@ -62,6 +108,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilLastRevisionDate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
@@ -75,6 +122,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilNextRevisionDate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
@@ -120,9 +168,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerCabinetName"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -162,9 +213,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerSwitchesName"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -204,9 +258,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerInventoryNumber"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -252,9 +309,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerLockIntegrity"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -294,9 +354,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerSealIntegrity"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -336,9 +399,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerCableEntries"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -378,9 +444,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerNoBareWires"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -420,9 +489,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerAddressLabels"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -462,9 +534,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerTerminalsIntegrity"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -504,9 +579,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerPainting"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -546,9 +624,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerHeating"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -588,9 +669,12 @@
 
                     <Spinner
                         android:id="@+id/spinnerGrounding"
-                        android:layout_width="60dp"
-                        android:layout_height="48dp"
-                        android:background="@android:drawable/editbox_dropdown_dark_frame" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
 
                     <TextView
                         android:layout_width="0dp"

@@ -75,6 +75,9 @@ class CabinetDetailActivity : AppCompatActivity() {
     private lateinit var btnPaintingPhoto: ImageButton
     private lateinit var btnHeatingPhoto: ImageButton
     private lateinit var btnGroundingPhoto: ImageButton
+    private lateinit var switchHasScheme: androidx.appcompat.widget.SwitchCompat
+    private lateinit var btnRename: ImageButton
+    private lateinit var tvCellNumberLabel: TextView
 
     // Кнопка удаления
     private lateinit var btnDelete: Button
@@ -164,6 +167,33 @@ class CabinetDetailActivity : AppCompatActivity() {
         btnGroundingPhoto = findViewById(R.id.btnGroundingPhoto)
 
         btnDelete = findViewById(R.id.btnDelete)
+
+        // Переключатель и кнопка переименования
+        switchHasScheme = findViewById(R.id.switchHasScheme)
+        btnRename = findViewById(R.id.btnRename)
+        tvCellNumberLabel = findViewById(R.id.tvCellNumberLabel)
+
+        // ЕДИНСТВЕННЫЙ слушатель для переключателя
+        switchHasScheme.setOnCheckedChangeListener { _, isChecked ->
+            toggleSchemeFieldsVisibility(isChecked)
+            autoSave()  // ← сохраняем при переключении
+        }
+
+        // Кнопка переименования
+        btnRename.setOnClickListener { showRenameDialog() }
+    }
+
+    private fun toggleSchemeFieldsVisibility(hasScheme: Boolean) {
+        val visibility = if (hasScheme) View.VISIBLE else View.GONE
+
+        // Сохраняем текущие даты перед скрытием
+        if (!hasScheme) {
+            // Даты останутся в scheme, ничего не обнуляем
+        }
+
+        findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.tilSchemeNumber)?.visibility = visibility
+        findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.tilLastRevisionDate)?.visibility = visibility
+        findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.tilNextRevisionDate)?.visibility = visibility
     }
 
     private fun initMaps() {
@@ -329,19 +359,33 @@ class CabinetDetailActivity : AppCompatActivity() {
         scheme?.let { s ->
             val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
-            val schemeNumber = etSchemeNumber.text.toString().takeIf { it.isNotEmpty() }
-            val lastRevisionDateStr = etEditLastRevisionDate.text.toString()
-            val nextRevisionDateStr = etEditNextRevisionDate.text.toString()
+            val hasScheme = switchHasScheme.isChecked
+            val schemeNumber = if (hasScheme) {
+                etSchemeNumber.text.toString().takeIf { it.isNotEmpty() }
+            } else {
+                null
+            }
+            val lastRevisionDateStr = if (hasScheme) etEditLastRevisionDate.text.toString() else ""
+            val nextRevisionDateStr = if (hasScheme) etEditNextRevisionDate.text.toString() else ""
 
-            val lastRevisionDate = try {
-                dateFormat.parse(lastRevisionDateStr)?.time ?: s.lastRevisionDate
-            } catch (e: Exception) { s.lastRevisionDate }
+            val lastRevisionDate = if (hasScheme && lastRevisionDateStr.isNotEmpty()) {
+                try {
+                    dateFormat.parse(lastRevisionDateStr)?.time ?: s.lastRevisionDate
+                } catch (e: Exception) { s.lastRevisionDate }
+            } else {
+                s.lastRevisionDate
+            }
 
-            val nextRevisionDate = try {
-                dateFormat.parse(nextRevisionDateStr)?.time ?: s.nextRevisionDate
-            } catch (e: Exception) { s.nextRevisionDate }
+            val nextRevisionDate = if (hasScheme && nextRevisionDateStr.isNotEmpty()) {
+                try {
+                    dateFormat.parse(nextRevisionDateStr)?.time ?: s.nextRevisionDate
+                } catch (e: Exception) { s.nextRevisionDate }
+            } else {
+                s.nextRevisionDate
+            }
 
             val updatedScheme = s.copy(
+                hasScheme = hasScheme,
                 schemeNumber = schemeNumber,
                 lastRevisionDate = lastRevisionDate,
                 nextRevisionDate = nextRevisionDate,
@@ -389,16 +433,38 @@ class CabinetDetailActivity : AppCompatActivity() {
                 if (index != -1) {
                     allSchemes[index] = updatedScheme
                     repository.saveSchemes(allSchemes)
-                    updateStatusDisplay(updatedScheme)
+                    scheme = updatedScheme
+                    updateDisplayStatus()
                 }
             }
         }
     }
 
-    private fun updateStatusDisplay(scheme: Scheme) {
-        val (statusText, statusColor) = getStatusInfo(scheme.nextRevisionDate)
-        tvStatus.text = statusText
-        tvStatus.setTextColor(statusColor)
+    private fun updateDisplayStatus() {
+        scheme?.let { s ->
+            // Если схема не требуется
+            if (!s.hasScheme) {
+                tvStatus.text = "📄 Не требуется"
+                tvStatus.setTextColor(Color.parseColor("#999999"))
+                return
+            }
+            // Если схема есть, но даты не заполнены
+            if (s.lastRevisionDate == 0L || s.nextRevisionDate == 0L) {
+                tvStatus.text = "📄 Нет схемы"
+                tvStatus.setTextColor(Color.parseColor("#999999"))
+                return
+            }
+            // Если всё нормально
+            val today = System.currentTimeMillis()
+            val daysLeft = ((s.nextRevisionDate - today) / (1000 * 60 * 60 * 24)).toInt()
+            val (statusText, statusColor) = when {
+                daysLeft < 0 -> "🔴 Просрочено" to Color.RED
+                daysLeft <= 30 -> "🟡 Скоро истекает" to Color.parseColor("#FF9800")
+                else -> "✅ Активна" to Color.GREEN
+            }
+            tvStatus.text = statusText
+            tvStatus.setTextColor(statusColor)
+        }
     }
 
     private fun loadSchemeData() {
@@ -412,7 +478,7 @@ class CabinetDetailActivity : AppCompatActivity() {
                 loadPhotos(s)
                 loadStatuses(s)
                 loadNotes(s)
-                updateStatusDisplay(s)
+                updateDisplayStatus()  // ← вместо updateStatusDisplay(s)
             }
             isLoading = false
         }
@@ -438,9 +504,18 @@ class CabinetDetailActivity : AppCompatActivity() {
 
         tvTitle.text = "📋 ${scheme.equipmentName}"
 
+        // Всегда заполняем поля, даже если схема отключена
         etSchemeNumber.setText(scheme.schemeNumber ?: "")
-        etEditLastRevisionDate.setText(dateFormat.format(Date(scheme.lastRevisionDate)))
-        etEditNextRevisionDate.setText(dateFormat.format(Date(scheme.nextRevisionDate)))
+        if (scheme.lastRevisionDate != 0L) {
+            etEditLastRevisionDate.setText(dateFormat.format(Date(scheme.lastRevisionDate)))
+        }
+        if (scheme.nextRevisionDate != 0L) {
+            etEditNextRevisionDate.setText(dateFormat.format(Date(scheme.nextRevisionDate)))
+        }
+
+        switchHasScheme.isChecked = scheme.hasScheme
+        toggleSchemeFieldsVisibility(scheme.hasScheme)
+        tvCellNumberLabel.text = "Ячейка: ${scheme.cellNumber ?: "—"}"
     }
 
     private fun loadStatuses(scheme: Scheme) {
@@ -504,16 +579,6 @@ class CabinetDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun getStatusInfo(nextRevisionDate: Long): Pair<String, Int> {
-        val today = System.currentTimeMillis()
-        val daysLeft = ((nextRevisionDate - today) / (1000 * 60 * 60 * 24)).toInt()
-        return when {
-            daysLeft < 0 -> "🔴 Просрочено" to Color.RED
-            daysLeft <= 30 -> "🟡 Скоро истекает" to Color.parseColor("#FF9800")
-            else -> "✅ Активна" to Color.GREEN
-        }
-    }
-
     private fun confirmDelete() {
         AlertDialog.Builder(this)
             .setTitle("Удаление схемы")
@@ -555,4 +620,41 @@ class CabinetDetailActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         photoHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
+
+    private fun showRenameDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_rename, null)
+        val etNewName = dialogView.findViewById<TextInputEditText>(R.id.etNewName)
+        val etNewCellNumber = dialogView.findViewById<TextInputEditText>(R.id.etNewCellNumber)
+
+        etNewName.setText(scheme?.equipmentName ?: "")
+        etNewCellNumber.setText(scheme?.cellNumber ?: "")
+
+        AlertDialog.Builder(this)
+            .setTitle("Переименовать шкаф")
+            .setView(dialogView)
+            .setPositiveButton("Сохранить") { _, _ ->
+                val newName = etNewName.text.toString().trim()
+                val newCellNumber = etNewCellNumber.text.toString().trim().takeIf { it.isNotEmpty() }
+                if (newName.isNotEmpty()) {
+                    lifecycleScope.launch {
+                        val allSchemes = repository.getAllSchemes().toMutableList()
+                        val index = allSchemes.indexOfFirst { it.id == schemeId }
+                        if (index != -1) {
+                            val updated = allSchemes[index].copy(
+                                equipmentName = newName,
+                                cellNumber = newCellNumber
+                            )
+                            allSchemes[index] = updated
+                            repository.saveSchemes(allSchemes)
+                            loadSchemeData()
+                            Toast.makeText(this@CabinetDetailActivity, "Переименовано", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+
 }

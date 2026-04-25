@@ -17,6 +17,7 @@ data class Scheme(
     val lastRevisionDate: Long,
     val nextRevisionDate: Long,
     val schemeNumber: String? = null,
+    val hasScheme: Boolean = true,
 
     // Чек-лист
     val cabinetNameChecked: Boolean = false,
@@ -65,6 +66,11 @@ data class Scheme(
 ) : Serializable {
 
     fun getStatus(): SchemeStatus {
+        // Если дата схемы не указана (0L) — значит схема отсутствует
+        if (lastRevisionDate == 0L || nextRevisionDate == 0L) {
+            return SchemeStatus.NO_SCHEME
+        }
+
         val today = System.currentTimeMillis()
         val daysLeft = ((nextRevisionDate - today) / (1000 * 60 * 60 * 24)).toInt()
         return when {
@@ -76,7 +82,10 @@ data class Scheme(
 }
 
 enum class SchemeStatus {
-    ACTIVE, EXPIRING, EXPIRED
+    ACTIVE,      // активная схема
+    EXPIRING,    // скоро истекает
+    EXPIRED,     // просрочена
+    NO_SCHEME    // схема отсутствует
 }
 
 enum class ChecklistStatus {
