@@ -37,8 +37,9 @@ class PhotoGalleryDialog(
         adapter = PhotoListAdapter(activity, photos)
         listView.adapter = adapter
 
+        // Вместо вызова PhotoViewDialog
         listView.setOnItemClickListener { _, _, position, _ ->
-            PhotoViewDialog(activity, photos[position]).show()
+            PhotoViewPagerDialog(activity, photos, position).show()
         }
 
         listView.setOnItemLongClickListener { _, _, position, _ ->

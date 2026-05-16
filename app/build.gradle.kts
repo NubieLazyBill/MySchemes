@@ -64,4 +64,5 @@ dependencies {
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
 
     implementation("org.apache.poi:poi-ooxml:5.2.5")
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
 }

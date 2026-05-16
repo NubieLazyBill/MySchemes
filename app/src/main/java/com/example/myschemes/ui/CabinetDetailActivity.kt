@@ -435,6 +435,34 @@ class CabinetDetailActivity : AppCompatActivity() {
                     repository.saveSchemes(allSchemes)
                     scheme = updatedScheme
                     updateDisplayStatus()
+
+                    // Обновляем цвета иконок примечаний
+                    updateNoteIconColor(btnCabinetNameNote, !updatedScheme.cabinetNameNote.isNullOrEmpty())
+                    updateNoteIconColor(btnSwitchesNameNote, !updatedScheme.switchesNameNote.isNullOrEmpty())
+                    updateNoteIconColor(btnInventoryNumberNote, !updatedScheme.inventoryNumberNote.isNullOrEmpty())
+                    updateNoteIconColor(btnLockIntegrityNote, !updatedScheme.lockIntegrityNote.isNullOrEmpty())
+                    updateNoteIconColor(btnSealIntegrityNote, !updatedScheme.sealIntegrityNote.isNullOrEmpty())
+                    updateNoteIconColor(btnCableEntriesNote, !updatedScheme.cableEntriesNote.isNullOrEmpty())
+                    updateNoteIconColor(btnNoBareWiresNote, !updatedScheme.noBareWiresNote.isNullOrEmpty())
+                    updateNoteIconColor(btnAddressLabelsNote, !updatedScheme.addressLabelsNote.isNullOrEmpty())
+                    updateNoteIconColor(btnTerminalsIntegrityNote, !updatedScheme.terminalsIntegrityNote.isNullOrEmpty())
+                    updateNoteIconColor(btnPaintingNote, !updatedScheme.paintingNote.isNullOrEmpty())
+                    updateNoteIconColor(btnHeatingNote, !updatedScheme.heatingNote.isNullOrEmpty())
+                    updateNoteIconColor(btnGroundingNote, !updatedScheme.groundingNote.isNullOrEmpty())
+
+                    // Обновляем цвета иконок фото
+                    updatePhotoIconColor(btnCabinetNamePhoto, photosMap["cabinetName"]?.isNotEmpty() == true)
+                    updatePhotoIconColor(btnSwitchesNamePhoto, photosMap["switchesName"]?.isNotEmpty() == true)
+                    updatePhotoIconColor(btnInventoryNumberPhoto, photosMap["inventoryNumber"]?.isNotEmpty() == true)
+                    updatePhotoIconColor(btnLockIntegrityPhoto, photosMap["lockIntegrity"]?.isNotEmpty() == true)
+                    updatePhotoIconColor(btnSealIntegrityPhoto, photosMap["sealIntegrity"]?.isNotEmpty() == true)
+                    updatePhotoIconColor(btnCableEntriesPhoto, photosMap["cableEntries"]?.isNotEmpty() == true)
+                    updatePhotoIconColor(btnNoBareWiresPhoto, photosMap["noBareWires"]?.isNotEmpty() == true)
+                    updatePhotoIconColor(btnAddressLabelsPhoto, photosMap["addressLabels"]?.isNotEmpty() == true)
+                    updatePhotoIconColor(btnTerminalsIntegrityPhoto, photosMap["terminalsIntegrity"]?.isNotEmpty() == true)
+                    updatePhotoIconColor(btnPaintingPhoto, photosMap["painting"]?.isNotEmpty() == true)
+                    updatePhotoIconColor(btnHeatingPhoto, photosMap["heating"]?.isNotEmpty() == true)
+                    updatePhotoIconColor(btnGroundingPhoto, photosMap["grounding"]?.isNotEmpty() == true)
                 }
             }
         }
@@ -516,6 +544,33 @@ class CabinetDetailActivity : AppCompatActivity() {
         switchHasScheme.isChecked = scheme.hasScheme
         toggleSchemeFieldsVisibility(scheme.hasScheme)
         tvCellNumberLabel.text = "Ячейка: ${scheme.cellNumber ?: "—"}"
+
+        // Обновляем цвета иконок
+        updateNoteIconColor(btnCabinetNameNote, !scheme.cabinetNameNote.isNullOrEmpty())
+        updateNoteIconColor(btnSwitchesNameNote, !scheme.switchesNameNote.isNullOrEmpty())
+        updateNoteIconColor(btnInventoryNumberNote, !scheme.inventoryNumberNote.isNullOrEmpty())
+        updateNoteIconColor(btnLockIntegrityNote, !scheme.lockIntegrityNote.isNullOrEmpty())
+        updateNoteIconColor(btnSealIntegrityNote, !scheme.sealIntegrityNote.isNullOrEmpty())
+        updateNoteIconColor(btnCableEntriesNote, !scheme.cableEntriesNote.isNullOrEmpty())
+        updateNoteIconColor(btnNoBareWiresNote, !scheme.noBareWiresNote.isNullOrEmpty())
+        updateNoteIconColor(btnAddressLabelsNote, !scheme.addressLabelsNote.isNullOrEmpty())
+        updateNoteIconColor(btnTerminalsIntegrityNote, !scheme.terminalsIntegrityNote.isNullOrEmpty())
+        updateNoteIconColor(btnPaintingNote, !scheme.paintingNote.isNullOrEmpty())
+        updateNoteIconColor(btnHeatingNote, !scheme.heatingNote.isNullOrEmpty())
+        updateNoteIconColor(btnGroundingNote, !scheme.groundingNote.isNullOrEmpty())
+
+        updatePhotoIconColor(btnCabinetNamePhoto, photosMap["cabinetName"]?.isNotEmpty() == true)
+        updatePhotoIconColor(btnSwitchesNamePhoto, photosMap["switchesName"]?.isNotEmpty() == true)
+        updatePhotoIconColor(btnInventoryNumberPhoto, photosMap["inventoryNumber"]?.isNotEmpty() == true)
+        updatePhotoIconColor(btnLockIntegrityPhoto, photosMap["lockIntegrity"]?.isNotEmpty() == true)
+        updatePhotoIconColor(btnSealIntegrityPhoto, photosMap["sealIntegrity"]?.isNotEmpty() == true)
+        updatePhotoIconColor(btnCableEntriesPhoto, photosMap["cableEntries"]?.isNotEmpty() == true)
+        updatePhotoIconColor(btnNoBareWiresPhoto, photosMap["noBareWires"]?.isNotEmpty() == true)
+        updatePhotoIconColor(btnAddressLabelsPhoto, photosMap["addressLabels"]?.isNotEmpty() == true)
+        updatePhotoIconColor(btnTerminalsIntegrityPhoto, photosMap["terminalsIntegrity"]?.isNotEmpty() == true)
+        updatePhotoIconColor(btnPaintingPhoto, photosMap["painting"]?.isNotEmpty() == true)
+        updatePhotoIconColor(btnHeatingPhoto, photosMap["heating"]?.isNotEmpty() == true)
+        updatePhotoIconColor(btnGroundingPhoto, photosMap["grounding"]?.isNotEmpty() == true)
     }
 
     private fun loadStatuses(scheme: Scheme) {
@@ -654,6 +709,16 @@ class CabinetDetailActivity : AppCompatActivity() {
             }
             .setNegativeButton("Отмена", null)
             .show()
+    }
+
+    private fun updateNoteIconColor(imageButton: ImageButton, hasNote: Boolean) {
+        val color = if (hasNote) Color.parseColor("#4CAF50") else Color.parseColor("#9E9E9E")
+        imageButton.setColorFilter(color)
+    }
+
+    private fun updatePhotoIconColor(imageButton: ImageButton, hasPhotos: Boolean) {
+        val color = if (hasPhotos) Color.parseColor("#4CAF50") else Color.parseColor("#9E9E9E")
+        imageButton.setColorFilter(color)
     }
 
 
