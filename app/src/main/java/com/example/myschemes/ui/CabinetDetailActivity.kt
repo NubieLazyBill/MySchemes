@@ -203,12 +203,12 @@ class CabinetDetailActivity : AppCompatActivity() {
             val dialog = PhotoGalleryDialog(
                 activity = this,
                 title = "Все фото шкафа",
-                photos = allPhotos
-            ) { updatedPhotos ->
-                // Обновлять фото не нужно, так как это просто просмотр
-                // Но можно добавить логику, если хотите
-            }
-            dialog.show()
+                photos = allPhotos,
+                onPhotosChanged = { updatedPhotos ->
+                    // Обновлять фото не нужно, так как это просто просмотр
+                }
+            )
+            dialog.show(scheme?.equipmentName ?: "шкаф", "Все фото")
         } else {
             Toast.makeText(this, "Нет фото для этого шкафа", Toast.LENGTH_SHORT).show()
         }
@@ -403,12 +403,13 @@ class CabinetDetailActivity : AppCompatActivity() {
         currentPhotoDialog = PhotoGalleryDialog(
             activity = this,
             title = title,
-            photos = photos
-        ) { updatedPhotos ->
-            photosMap[key] = updatedPhotos.toMutableList()
-            autoSave()
-        }
-        currentPhotoDialog?.show()
+            photos = photos,
+            onPhotosChanged = { updatedPhotos ->
+                photosMap[key] = updatedPhotos.toMutableList()
+                autoSave()
+            }
+        )
+        currentPhotoDialog?.show(scheme?.equipmentName ?: "шкаф", title)
     }
 
     private fun autoSave() {

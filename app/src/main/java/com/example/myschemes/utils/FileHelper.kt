@@ -4,17 +4,35 @@ import android.content.Context
 import android.net.Uri
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.*
 
 object FileHelper {
 
-    fun savePhotoToAppStorage(context: Context, sourcePath: String): String? {
+    fun savePhotoToAppStorage(
+        context: Context,
+        sourcePath: String,
+        equipmentName: String,
+        checkpointName: String
+    ): String? {
         return try {
             val destinationDir = File(context.filesDir, "photos")
             if (!destinationDir.exists()) {
                 destinationDir.mkdirs()
             }
 
-            val fileName = "photo_${System.currentTimeMillis()}.jpg"
+            val cleanEquipmentName = equipmentName
+                .replace("[^a-zA-Zа-яА-Я0-9]".toRegex(), "_")
+                .replace(" ", "_")
+                .take(30)
+
+            val cleanCheckpointName = checkpointName
+                .replace("[^a-zA-Zа-яА-Я0-9]".toRegex(), "_")
+                .replace(" ", "_")
+                .take(50)
+
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val fileName = "${cleanEquipmentName}|${cleanCheckpointName}_$timeStamp.jpg"
             val destinationFile = File(destinationDir, fileName)
 
             val inputStream = if (sourcePath.startsWith("content://")) {

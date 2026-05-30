@@ -26,8 +26,12 @@ class PhotoGalleryDialog(
     private lateinit var photoHelper: PhotoHelper
     private lateinit var listView: ListView
     private lateinit var adapter: PhotoListAdapter
+    private var equipmentName: String = ""
+    private var checkpointTitle: String = ""
 
-    fun show() {
+    fun show(equipmentName: String, checkpointTitle: String) {
+        this.equipmentName = equipmentName
+        this.checkpointTitle = checkpointTitle
         photoHelper = PhotoHelper(activity)
 
         val view = LayoutInflater.from(activity).inflate(R.layout.dialog_photo_gallery, null)
@@ -37,7 +41,6 @@ class PhotoGalleryDialog(
         adapter = PhotoListAdapter(activity, photos)
         listView.adapter = adapter
 
-        // Вместо вызова PhotoViewDialog
         listView.setOnItemClickListener { _, _, position, _ ->
             PhotoViewPagerDialog(activity, photos, position).show()
         }
@@ -80,7 +83,7 @@ class PhotoGalleryDialog(
     }
 
     private fun takePhoto() {
-        photoHelper.takePhoto { path ->
+        photoHelper.takePhoto(equipmentName, checkpointTitle) { path ->
             android.util.Log.d("PhotoGallery", "Фото получено: $path")
             photos.add(path)
             adapter.notifyDataSetChanged()
@@ -89,7 +92,7 @@ class PhotoGalleryDialog(
     }
 
     private fun pickFromGallery() {
-        photoHelper.pickFromGallery { path ->
+        photoHelper.pickFromGallery(equipmentName, checkpointTitle) { path ->
             android.util.Log.d("PhotoGallery", "Фото из галереи сохранено: $path")
             photos.add(path)
             adapter.notifyDataSetChanged()
@@ -112,14 +115,11 @@ class PhotoGalleryDialog(
             .show()
     }
 
-    // Внутренний адаптер с миниатюрами
+    // ТОЛЬКО ОДИН КЛАСС PhotoListAdapter (правильная версия)
     inner class PhotoListAdapter(
         private val context: android.content.Context,
         private val photoList: List<String>
     ) : BaseAdapter() {
-
-        // Формат только даты (без времени)
-        private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
         override fun getCount(): Int = photoList.size
 
@@ -133,30 +133,61 @@ class PhotoGalleryDialog(
 
             val text1 = view.findViewById<TextView>(android.R.id.text1)
             val photoPath = photoList[position]
+            val file = File(photoPath)
 
-            // Название = дата создания файла (только дата, без времени)
-            val fileName = if (photoPath.startsWith("content://")) {
-                "Фото из галереи"
-            } else {
-                val file = File(photoPath)
-                if (file.exists()) {
-                    val lastModified = Date(file.lastModified())
-                    dateFormat.format(lastModified)  // только дата
+            // Получаем имя файла без расширения
+            val fileName = file.nameWithoutExtension
+
+            // Ищем дату в конце имени файла (8 цифр подряд)
+            val datePattern = Regex("(\\d{8})(?:_\\d{6})?$")
+            val dateMatch = datePattern.find(fileName)
+
+            val displayText = if (dateMatch != null) {
+                val datePart = dateMatch.groupValues[1]
+                val beforeDate = fileName.substring(0, dateMatch.range.first).trimEnd('_')
+
+                // Ищем разделитель |
+                val separatorIndex = beforeDate.indexOf('|')
+
+                val checkpointName = if (separatorIndex != -1) {
+                    // Берём всё ПОСЛЕ | и заменяем _ на пробелы
+                    beforeDate.substring(separatorIndex + 1).replace("_", " ")
                 } else {
-                    "Фото"
+                    // Для старых файлов (без |) - пробуем старый способ
+                    val segments = beforeDate.split("_")
+                    if (segments.size > 1) {
+                        segments.drop(1).joinToString(" ")
+                    } else {
+                        beforeDate.replace("_", " ")
+                    }
                 }
+
+                val formattedDate = if (datePart.length == 8) {
+                    "${datePart.take(4)}.${datePart.substring(4, 6)}.${datePart.takeLast(2)}"
+                } else {
+                    datePart
+                }
+
+                "$checkpointName\n$formattedDate"
+            } else {
+                // Для старых фото - только дата из файла
+                val lastModified = Date(file.lastModified())
+                val dateFormat = SimpleDateFormat("yyyy.MM.dd", Locale.getDefault())
+                dateFormat.format(lastModified)
             }
 
-            text1.text = fileName
+            text1.text = displayText
+            text1.setSingleLine(false)
+            text1.maxLines = 2
+            text1.textSize = 14f
 
-            // Загружаем миниатюру (увеличенная в 2 раза: 320x240 вместо 160x120)
+            // Загружаем миниатюру
             loadThumbnail(photoPath) { bitmap ->
                 val drawable = android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
-                drawable.setBounds(0, 0, 320, 240)  // увеличенная миниатюра 320x240 (в 2 раза больше)
+                drawable.setBounds(0, 0, 280, 200)
                 text1.setCompoundDrawables(drawable, null, null, null)
-                text1.compoundDrawablePadding = 20
-                // Увеличиваем высоту строки, чтобы поместилась миниатюра
-                text1.minHeight = 260
+                text1.compoundDrawablePadding = 16
+                text1.minHeight = 220
             }
 
             return view
@@ -173,7 +204,7 @@ class PhotoGalleryDialog(
                     val file = File(photoPath)
                     if (file.exists()) {
                         val options = BitmapFactory.Options()
-                        options.inSampleSize = 2  // уменьшаем меньше для лучшего качества
+                        options.inSampleSize = 2
                         BitmapFactory.decodeFile(photoPath, options)
                     } else null
                 }

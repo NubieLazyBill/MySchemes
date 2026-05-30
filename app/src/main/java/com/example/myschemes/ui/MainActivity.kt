@@ -606,12 +606,13 @@ class MainActivity : AppCompatActivity() {
             val dialog = PhotoGalleryDialog(
                 activity = this,
                 title = "Все фото: ${scheme.equipmentName}",
-                photos = allPhotos
-            ) { updatedPhotos ->
-                // Обновлять фото не нужно, так как это просто просмотр
-                // Если хотите разрешить удаление из этого диалога - нужно будет обновить схему
-            }
-            dialog.show()
+                photos = allPhotos,
+                onPhotosChanged = { updatedPhotos ->
+                    // Обновлять фото не нужно, так как это просто просмотр
+                    // Если хотите разрешить удаление из этого диалога - нужно будет обновить схему
+                }
+            )
+            dialog.show(scheme.equipmentName, "Все фото")
         } else {
             Toast.makeText(this, "Нет фото для этого шкафа", Toast.LENGTH_SHORT).show()
         }
