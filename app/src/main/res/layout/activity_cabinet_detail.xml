@@ -11,84 +11,84 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Заголовок с названием оборудования, статусом и кнопкой переименования -->
+        <!-- Заголовок с названием оборудования, статусом и кнопками -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="16dp">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#2C3E50" />
+
+            <ImageButton
+                android:id="@+id/btnAllPhotos"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_gallery"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Все фото" />
+
+            <ImageButton
+                android:id="@+id/btnRename"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Переименовать" />
+
+        </LinearLayout>
+
+        <!-- Ячейка (просто текст, не редактируемый) -->
+        <TextView
+            android:id="@+id/tvCellNumberLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ячейка: —"
+            android:textSize="14sp"
+            android:textColor="#666"
+            android:layout_marginTop="4dp" />
+
+        <!-- Переключатель наличия схемы и статус -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
                 <TextView
-                    android:id="@+id/tvTitle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="#2C3E50" />
-
-                <ImageButton
-                    android:id="@+id/btnRename"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@android:drawable/ic_menu_edit"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Переименовать" />
-
-            </LinearLayout>
-
-            <!-- Ячейка (просто текст, не редактируемый) -->
-            <TextView
-                android:id="@+id/tvCellNumberLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ячейка: —"
-                android:textSize="14sp"
-                android:textColor="#666"
-                android:layout_marginTop="4dp" />
-
-            <!-- Переключатель наличия схемы и статус -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="8dp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Наличие схемы: "
-                        android:textSize="14sp" />
-
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switchHasScheme"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/tvStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:padding="6dp"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:text="Наличие схемы: "
+                    android:textSize="14sp" />
 
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchHasScheme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="6dp"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -203,103 +203,7 @@
 
                 </LinearLayout>
 
-                <!-- 2. ДН автоматов, рубильников -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="4dp">
-
-                    <Spinner
-                        android:id="@+id/spinnerSwitchesName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="60dp"
-                        android:background="@null"
-                        android:padding="4dp"
-                        android:spinnerMode="dropdown" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="🔌 ДН автоматов, рубильников"
-                        android:padding="8dp"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#2C3E50" />
-
-                    <ImageButton
-                        android:id="@+id/btnSwitchesNameNote"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@android:drawable/ic_menu_edit"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="4dp" />
-
-                    <ImageButton
-                        android:id="@+id/btnSwitchesNamePhoto"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@android:drawable/ic_menu_camera"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="4dp" />
-
-                </LinearLayout>
-
-                <!-- 3. Инвентарный номер -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="4dp">
-
-                    <Spinner
-                        android:id="@+id/spinnerInventoryNumber"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="60dp"
-                        android:background="@null"
-                        android:padding="4dp"
-                        android:spinnerMode="dropdown" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="🔢 Инвентарный номер"
-                        android:padding="8dp"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#2C3E50" />
-
-                    <ImageButton
-                        android:id="@+id/btnInventoryNumberNote"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@android:drawable/ic_menu_edit"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="4dp" />
-
-                    <ImageButton
-                        android:id="@+id/btnInventoryNumberPhoto"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@android:drawable/ic_menu_camera"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="4dp" />
-
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#E0E0E0"
-                    android:layout_marginVertical="8dp" />
-
-                <!-- 4. Целостность замков -->
+                <!-- 2. Целостность замков -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -336,6 +240,96 @@
 
                     <ImageButton
                         android:id="@+id/btnLockIntegrityPhoto"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_camera"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
+
+                </LinearLayout>
+
+                <!-- 3. Окраска -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
+
+                    <Spinner
+                        android:id="@+id/spinnerPainting"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🎨 Окраска"
+                        android:padding="8dp"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
+
+                    <ImageButton
+                        android:id="@+id/btnPaintingNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
+
+                    <ImageButton
+                        android:id="@+id/btnPaintingPhoto"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_camera"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
+
+                </LinearLayout>
+
+                <!-- 4. Заземление -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
+
+                    <Spinner
+                        android:id="@+id/spinnerGrounding"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="⛓️ Заземление"
+                        android:padding="8dp"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
+
+                    <ImageButton
+                        android:id="@+id/btnGroundingNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
+
+                    <ImageButton
+                        android:id="@+id/btnGroundingPhoto"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"
@@ -389,7 +383,103 @@
 
                 </LinearLayout>
 
-                <!-- 6. Заходы кабелей -->
+                <!-- 6. Инвентарный номер -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
+
+                    <Spinner
+                        android:id="@+id/spinnerInventoryNumber"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🔢 Инвентарный номер"
+                        android:padding="8dp"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
+
+                    <ImageButton
+                        android:id="@+id/btnInventoryNumberNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
+
+                    <ImageButton
+                        android:id="@+id/btnInventoryNumberPhoto"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_camera"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
+
+                </LinearLayout>
+
+                <!-- 7. ДН автоматов, рубильников -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="4dp">
+
+                    <Spinner
+                        android:id="@+id/spinnerSwitchesName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="60dp"
+                        android:background="@null"
+                        android:padding="4dp"
+                        android:spinnerMode="dropdown" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🔌 ДН автоматов, рубильников"
+                        android:padding="8dp"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#2C3E50" />
+
+                    <ImageButton
+                        android:id="@+id/btnSwitchesNameNote"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_edit"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
+
+                    <ImageButton
+                        android:id="@+id/btnSwitchesNamePhoto"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_camera"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginVertical="8dp" />
+
+                <!-- 8. Заходы кабелей -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -434,7 +524,7 @@
 
                 </LinearLayout>
 
-                <!-- 7. Нет оголённых жил -->
+                <!-- 9. Нет оголённых жил -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -479,7 +569,7 @@
 
                 </LinearLayout>
 
-                <!-- 8. Адресные бирки -->
+                <!-- 10. Адресные бирки -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -524,7 +614,7 @@
 
                 </LinearLayout>
 
-                <!-- 9. Целостность клеммников -->
+                <!-- 11. Целостность клеммников -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -569,52 +659,7 @@
 
                 </LinearLayout>
 
-                <!-- 10. Окраска -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="4dp">
-
-                    <Spinner
-                        android:id="@+id/spinnerPainting"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="60dp"
-                        android:background="@null"
-                        android:padding="4dp"
-                        android:spinnerMode="dropdown" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="🎨 Окраска"
-                        android:padding="8dp"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#2C3E50" />
-
-                    <ImageButton
-                        android:id="@+id/btnPaintingNote"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@android:drawable/ic_menu_edit"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="4dp" />
-
-                    <ImageButton
-                        android:id="@+id/btnPaintingPhoto"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@android:drawable/ic_menu_camera"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="4dp" />
-
-                </LinearLayout>
-
-                <!-- 11. Обогрев -->
+                <!-- 12. Обогрев -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -651,51 +696,6 @@
 
                     <ImageButton
                         android:id="@+id/btnHeatingPhoto"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@android:drawable/ic_menu_camera"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="4dp" />
-
-                </LinearLayout>
-
-                <!-- 12. Заземление -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="4dp">
-
-                    <Spinner
-                        android:id="@+id/spinnerGrounding"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="60dp"
-                        android:background="@null"
-                        android:padding="4dp"
-                        android:spinnerMode="dropdown" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="⛓️ Заземление"
-                        android:padding="8dp"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#2C3E50" />
-
-                    <ImageButton
-                        android:id="@+id/btnGroundingNote"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@android:drawable/ic_menu_edit"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:padding="4dp" />
-
-                    <ImageButton
-                        android:id="@+id/btnGroundingPhoto"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:src="@android:drawable/ic_menu_camera"

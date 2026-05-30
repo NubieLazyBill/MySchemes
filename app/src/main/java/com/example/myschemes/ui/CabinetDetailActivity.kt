@@ -1,6 +1,8 @@
 package com.example.myschemes.ui
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -99,7 +101,11 @@ class CabinetDetailActivity : AppCompatActivity() {
     private var currentPhotoDialog: PhotoGalleryDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // ЗАПРЕЩАЕМ ПОВОРОТ ЭКРАНА
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_cabinet_detail)
 
         photoHelper = PhotoHelper(this)
@@ -117,6 +123,14 @@ class CabinetDetailActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
+
+        lateinit var btnAllPhotos: ImageButton
+
+        btnAllPhotos = findViewById(R.id.btnAllPhotos)
+        btnAllPhotos.setOnClickListener {
+            showAllPhotos()
+        }
+
         tvTitle = findViewById(R.id.tvTitle)
         tvStatus = findViewById(R.id.tvStatus)
 
@@ -183,6 +197,42 @@ class CabinetDetailActivity : AppCompatActivity() {
         btnRename.setOnClickListener { showRenameDialog() }
     }
 
+    private fun showAllPhotos() {
+        val allPhotos = getAllPhotosFromCurrentScheme().toMutableList()
+        if (allPhotos.isNotEmpty()) {
+            val dialog = PhotoGalleryDialog(
+                activity = this,
+                title = "Все фото шкафа",
+                photos = allPhotos
+            ) { updatedPhotos ->
+                // Обновлять фото не нужно, так как это просто просмотр
+                // Но можно добавить логику, если хотите
+            }
+            dialog.show()
+        } else {
+            Toast.makeText(this, "Нет фото для этого шкафа", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun getAllPhotosFromCurrentScheme(): List<String> {
+        val allPhotos = mutableListOf<String>()
+        scheme?.let { s ->
+            allPhotos.addAll(s.cabinetNamePhotos)
+            allPhotos.addAll(s.switchesNamePhotos)
+            allPhotos.addAll(s.inventoryNumberPhotos)
+            allPhotos.addAll(s.lockIntegrityPhotos)
+            allPhotos.addAll(s.sealIntegrityPhotos)
+            allPhotos.addAll(s.cableEntriesPhotos)
+            allPhotos.addAll(s.noBareWiresPhotos)
+            allPhotos.addAll(s.addressLabelsPhotos)
+            allPhotos.addAll(s.terminalsIntegrityPhotos)
+            allPhotos.addAll(s.paintingPhotos)
+            allPhotos.addAll(s.heatingPhotos)
+            allPhotos.addAll(s.groundingPhotos)
+        }
+        return allPhotos
+    }
+
     private fun toggleSchemeFieldsVisibility(hasScheme: Boolean) {
         val visibility = if (hasScheme) View.VISIBLE else View.GONE
 
@@ -220,10 +270,18 @@ class CabinetDetailActivity : AppCompatActivity() {
         val adapter = StatusSpinnerAdapter(this, statusItems)
 
         val spinners = listOf(
-            spinnerCabinetName, spinnerSwitchesName, spinnerInventoryNumber,
-            spinnerLockIntegrity, spinnerSealIntegrity, spinnerCableEntries,
-            spinnerNoBareWires, spinnerAddressLabels, spinnerTerminalsIntegrity,
-            spinnerPainting, spinnerHeating, spinnerGrounding
+            spinnerCabinetName,     // 1. Диспетчерское наименование
+            spinnerLockIntegrity,   // 2. Целостность замков
+            spinnerPainting,        // 3. Окраска
+            spinnerGrounding,       // 4. Заземление
+            spinnerSealIntegrity,   // 5. Уплотнение шкафа
+            spinnerInventoryNumber, // 6. Инвентарный номер
+            spinnerSwitchesName,    // 7. ДН автоматов, рубильников
+            spinnerCableEntries,    // 8. Заходы кабелей
+            spinnerNoBareWires,     // 9. Нет оголённых жил
+            spinnerAddressLabels,   // 10. Адресные бирки
+            spinnerTerminalsIntegrity, // 11. Целостность клеммников
+            spinnerHeating          // 12. Обогрев
         )
 
         spinners.forEach { spinner ->
@@ -233,17 +291,17 @@ class CabinetDetailActivity : AppCompatActivity() {
                     if (!isLoading) {
                         val key = when (spinner.id) {
                             R.id.spinnerCabinetName -> "cabinetName"
-                            R.id.spinnerSwitchesName -> "switchesName"
-                            R.id.spinnerInventoryNumber -> "inventoryNumber"
                             R.id.spinnerLockIntegrity -> "lockIntegrity"
+                            R.id.spinnerPainting -> "painting"
+                            R.id.spinnerGrounding -> "grounding"
                             R.id.spinnerSealIntegrity -> "sealIntegrity"
+                            R.id.spinnerInventoryNumber -> "inventoryNumber"
+                            R.id.spinnerSwitchesName -> "switchesName"
                             R.id.spinnerCableEntries -> "cableEntries"
                             R.id.spinnerNoBareWires -> "noBareWires"
                             R.id.spinnerAddressLabels -> "addressLabels"
                             R.id.spinnerTerminalsIntegrity -> "terminalsIntegrity"
-                            R.id.spinnerPainting -> "painting"
-                            R.id.spinnerHeating -> "heating"
-                            else -> "grounding"
+                            else -> "heating"
                         }
                         statusMap[key] = position
                         autoSave()
@@ -720,6 +778,4 @@ class CabinetDetailActivity : AppCompatActivity() {
         val color = if (hasPhotos) Color.parseColor("#4CAF50") else Color.parseColor("#9E9E9E")
         imageButton.setColorFilter(color)
     }
-
-
 }

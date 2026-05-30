@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
@@ -14,7 +15,8 @@ import java.util.*
 
 class SchemeAdapter(
     private var schemes: List<Scheme>,
-    private val onItemClick: (Scheme) -> Unit
+    private val onItemClick: (Scheme) -> Unit,
+    private val onAllPhotosClick: (Scheme) -> Unit   // ← НОВЫЙ КОЛБЭК
 ) : RecyclerView.Adapter<SchemeAdapter.SchemeViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SchemeViewHolder {
@@ -24,7 +26,7 @@ class SchemeAdapter(
     }
 
     override fun onBindViewHolder(holder: SchemeViewHolder, position: Int) {
-        holder.bind(schemes[position], onItemClick)
+        holder.bind(schemes[position], onItemClick, onAllPhotosClick)
     }
 
     override fun getItemCount() = schemes.size
@@ -40,8 +42,9 @@ class SchemeAdapter(
         private val tvNextRevisionDate: TextView = itemView.findViewById(R.id.tvNextRevisionDate)
         private val tvStatus: TextView = itemView.findViewById(R.id.tvStatus)
         private val cardView: CardView = itemView as CardView
+        private val btnAllPhotos: ImageButton = itemView.findViewById(R.id.btnAllPhotos)
 
-        fun bind(scheme: Scheme, onItemClick: (Scheme) -> Unit) {
+        fun bind(scheme: Scheme, onItemClick: (Scheme) -> Unit, onAllPhotosClick: (Scheme) -> Unit) {
             val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
             tvEquipmentName.text = scheme.equipmentName
@@ -61,6 +64,7 @@ class SchemeAdapter(
             tvStatus.setTextColor(textColor)
 
             cardView.setOnClickListener { onItemClick(scheme) }
+            btnAllPhotos.setOnClickListener { onAllPhotosClick(scheme) }
         }
 
         private fun getStatusInfo(scheme: Scheme): Triple<String, Int, Int> {

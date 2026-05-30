@@ -13,6 +13,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.myschemes.R
 import com.github.chrisbanes.photoview.PhotoView
 import java.io.File
+import android.widget.TextView
 
 class PhotoViewPagerDialog(
     private val activity: AppCompatActivity,
@@ -21,24 +22,36 @@ class PhotoViewPagerDialog(
 ) {
 
     fun show() {
+        if (photoPaths.isEmpty()) return
+
         val view = LayoutInflater.from(activity).inflate(R.layout.dialog_photo_view_pager, null)
         val viewPager = view.findViewById<ViewPager2>(R.id.viewPager)
         val btnClose = view.findViewById<ImageButton>(R.id.btnClose)
+        val tvCounter = view.findViewById<TextView>(R.id.tvPhotoCounter)
 
         val adapter = PhotoPagerAdapter(photoPaths)
         viewPager.adapter = adapter
         viewPager.currentItem = startPosition
 
-        btnClose.setOnClickListener {
-            (view.parent as? ViewGroup)?.let {
-                (it.parent as? AlertDialog)?.dismiss()
+        // Обновляем счётчик
+        tvCounter.text = "${startPosition + 1} / ${photoPaths.size}"
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                tvCounter.text = "${position + 1} / ${photoPaths.size}"
             }
-        }
+        })
 
+        // СОЗДАЁМ ДИАЛОГ
         val dialog = AlertDialog.Builder(activity)
             .setView(view)
             .setCancelable(true)
             .create()
+
+        // ПРОСТО ЗАКРЫВАЕМ ДИАЛОГ
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
 
         dialog.show()
         dialog.window?.setLayout(

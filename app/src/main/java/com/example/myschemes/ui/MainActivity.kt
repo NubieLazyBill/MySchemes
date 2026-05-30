@@ -20,6 +20,7 @@ import com.example.myschemes.worker.NotificationWorker
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import android.Manifest
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
@@ -37,6 +38,7 @@ import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
 import androidx.activity.result.contract.ActivityResultContracts
 import org.apache.poi.ss.usermodel.CellType
+import com.example.myschemes.ui.PhotoViewPagerDialog
 
 class MainActivity : AppCompatActivity() {
 
@@ -52,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -67,11 +70,17 @@ class MainActivity : AppCompatActivity() {
         val database = SchemeDatabase.getInstance(this)
         repository = SchemeRepository(database.schemeDao())
 
-        adapter = SchemeAdapter(emptyList()) { scheme ->
-            val intent = Intent(this, CabinetDetailActivity::class.java)
-            intent.putExtra("scheme_id", scheme.id)
-            startActivity(intent)
-        }
+        adapter = SchemeAdapter(
+            schemes = emptyList(),
+            onItemClick = { scheme ->
+                val intent = Intent(this, CabinetDetailActivity::class.java)
+                intent.putExtra("scheme_id", scheme.id)
+                startActivity(intent)
+            },
+            onAllPhotosClick = { scheme ->
+                showAllPhotosForScheme(scheme)
+            }
+        )
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
@@ -591,6 +600,38 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun showAllPhotosForScheme(scheme: Scheme) {
+        val allPhotos = getAllPhotosFromScheme(scheme).toMutableList()
+        if (allPhotos.isNotEmpty()) {
+            val dialog = PhotoGalleryDialog(
+                activity = this,
+                title = "Все фото: ${scheme.equipmentName}",
+                photos = allPhotos
+            ) { updatedPhotos ->
+                // Обновлять фото не нужно, так как это просто просмотр
+                // Если хотите разрешить удаление из этого диалога - нужно будет обновить схему
+            }
+            dialog.show()
+        } else {
+            Toast.makeText(this, "Нет фото для этого шкафа", Toast.LENGTH_SHORT).show()
+        }
+    }
 
+    private fun getAllPhotosFromScheme(scheme: Scheme): List<String> {
+        val allPhotos = mutableListOf<String>()
+        allPhotos.addAll(scheme.cabinetNamePhotos)
+        allPhotos.addAll(scheme.switchesNamePhotos)
+        allPhotos.addAll(scheme.inventoryNumberPhotos)
+        allPhotos.addAll(scheme.lockIntegrityPhotos)
+        allPhotos.addAll(scheme.sealIntegrityPhotos)
+        allPhotos.addAll(scheme.cableEntriesPhotos)
+        allPhotos.addAll(scheme.noBareWiresPhotos)
+        allPhotos.addAll(scheme.addressLabelsPhotos)
+        allPhotos.addAll(scheme.terminalsIntegrityPhotos)
+        allPhotos.addAll(scheme.paintingPhotos)
+        allPhotos.addAll(scheme.heatingPhotos)
+        allPhotos.addAll(scheme.groundingPhotos)
+        return allPhotos
+    }
 
 }
