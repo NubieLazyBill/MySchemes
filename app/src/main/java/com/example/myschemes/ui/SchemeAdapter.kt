@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
@@ -18,7 +17,7 @@ class SchemeAdapter(
     private var schemes: List<Scheme>,
     private val onItemClick: (Scheme) -> Unit,
     private val onAllPhotosClick: (Scheme) -> Unit,
-    private val onInspectedClick: (Scheme, Boolean) -> Unit  // ← новый колбэк
+    private val onInspectedClick: (Scheme, Boolean) -> Unit
 ) : RecyclerView.Adapter<SchemeAdapter.SchemeViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SchemeViewHolder {
@@ -46,7 +45,6 @@ class SchemeAdapter(
         private val cardView: CardView = itemView as CardView
         private val btnAllPhotos: ImageButton = itemView.findViewById(R.id.btnAllPhotos)
         private val btnInspected: ImageButton = itemView.findViewById(R.id.btnInspected)
-        private val ivInspected: ImageView = itemView.findViewById(R.id.ivInspected)
 
         fun bind(
             scheme: Scheme,
@@ -72,12 +70,10 @@ class SchemeAdapter(
             tvStatus.setBackgroundColor(bgColor)
             tvStatus.setTextColor(textColor)
 
-            // Отображаем статус осмотра
+            // Меняем иконку кнопки в зависимости от статуса осмотра
             if (scheme.isInspected) {
-                ivInspected.visibility = View.VISIBLE
                 btnInspected.setImageResource(android.R.drawable.checkbox_on_background)
             } else {
-                ivInspected.visibility = View.GONE
                 btnInspected.setImageResource(android.R.drawable.checkbox_off_background)
             }
 

@@ -2,10 +2,11 @@ package com.example.myschemes.ui
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
@@ -236,11 +237,6 @@ class CabinetDetailActivity : AppCompatActivity() {
     private fun toggleSchemeFieldsVisibility(hasScheme: Boolean) {
         val visibility = if (hasScheme) View.VISIBLE else View.GONE
 
-        // Сохраняем текущие даты перед скрытием
-        if (!hasScheme) {
-            // Даты останутся в scheme, ничего не обнуляем
-        }
-
         findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.tilSchemeNumber)?.visibility = visibility
         findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.tilLastRevisionDate)?.visibility = visibility
         findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.tilNextRevisionDate)?.visibility = visibility
@@ -270,18 +266,18 @@ class CabinetDetailActivity : AppCompatActivity() {
         val adapter = StatusSpinnerAdapter(this, statusItems)
 
         val spinners = listOf(
-            spinnerCabinetName,     // 1. Диспетчерское наименование
-            spinnerLockIntegrity,   // 2. Целостность замков
-            spinnerPainting,        // 3. Окраска
-            spinnerGrounding,       // 4. Заземление
-            spinnerSealIntegrity,   // 5. Уплотнение шкафа
-            spinnerInventoryNumber, // 6. Инвентарный номер
-            spinnerSwitchesName,    // 7. ДН автоматов, рубильников
-            spinnerCableEntries,    // 8. Заходы кабелей
-            spinnerNoBareWires,     // 9. Нет оголённых жил
-            spinnerAddressLabels,   // 10. Адресные бирки
-            spinnerTerminalsIntegrity, // 11. Целостность клеммников
-            spinnerHeating          // 12. Обогрев
+            spinnerCabinetName,
+            spinnerLockIntegrity,
+            spinnerPainting,
+            spinnerGrounding,
+            spinnerSealIntegrity,
+            spinnerInventoryNumber,
+            spinnerSwitchesName,
+            spinnerCableEntries,
+            spinnerNoBareWires,
+            spinnerAddressLabels,
+            spinnerTerminalsIntegrity,
+            spinnerHeating
         )
 
         spinners.forEach { spinner ->
@@ -355,13 +351,13 @@ class CabinetDetailActivity : AppCompatActivity() {
 
         btnDelete.setOnClickListener { confirmDelete() }
 
-        // Автообновление даты следующего пересмотра
+        // Автообновление даты следующего пересмотра с сохранением
         etEditLastRevisionDate.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {
                 val dateStr = s.toString()
-                if (dateStr.isNotEmpty()) {
+                if (dateStr.isNotEmpty() && dateStr.length == 10) {
                     val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
                     try {
                         val parsedDate = dateFormat.parse(dateStr)
@@ -373,6 +369,13 @@ class CabinetDetailActivity : AppCompatActivity() {
                             val newNextDate = dateFormat.format(calendar.time)
                             if (etEditNextRevisionDate.text.toString() != newNextDate) {
                                 etEditNextRevisionDate.setText(newNextDate)
+                                // Принудительно сохраняем после обновления даты
+                                Handler(Looper.getMainLooper()).postDelayed({
+                                    if (!isLoading) {
+                                        autoSave()
+                                        updateDisplayStatus()
+                                    }
+                                }, 50)
                             }
                         }
                     } catch (e: Exception) { }
@@ -529,19 +532,16 @@ class CabinetDetailActivity : AppCompatActivity() {
 
     private fun updateDisplayStatus() {
         scheme?.let { s ->
-            // Если схема не требуется
             if (!s.hasScheme) {
                 tvStatus.text = "📄 Не требуется"
                 tvStatus.setTextColor(Color.parseColor("#999999"))
                 return
             }
-            // Если схема есть, но даты не заполнены
             if (s.lastRevisionDate == 0L || s.nextRevisionDate == 0L) {
                 tvStatus.text = "📄 Нет схемы"
                 tvStatus.setTextColor(Color.parseColor("#999999"))
                 return
             }
-            // Если всё нормально
             val today = System.currentTimeMillis()
             val daysLeft = ((s.nextRevisionDate - today) / (1000 * 60 * 60 * 24)).toInt()
             val (statusText, statusColor) = when {
@@ -565,7 +565,7 @@ class CabinetDetailActivity : AppCompatActivity() {
                 loadPhotos(s)
                 loadStatuses(s)
                 loadNotes(s)
-                updateDisplayStatus()  // ← вместо updateStatusDisplay(s)
+                updateDisplayStatus()
             }
             isLoading = false
         }
@@ -591,7 +591,6 @@ class CabinetDetailActivity : AppCompatActivity() {
 
         tvTitle.text = "📋 ${scheme.equipmentName}"
 
-        // Всегда заполняем поля, даже если схема отключена
         etSchemeNumber.setText(scheme.schemeNumber ?: "")
         if (scheme.lastRevisionDate != 0L) {
             etEditLastRevisionDate.setText(dateFormat.format(Date(scheme.lastRevisionDate)))
@@ -604,7 +603,6 @@ class CabinetDetailActivity : AppCompatActivity() {
         toggleSchemeFieldsVisibility(scheme.hasScheme)
         tvCellNumberLabel.text = "Ячейка: ${scheme.cellNumber ?: "—"}"
 
-        // Обновляем цвета иконок
         updateNoteIconColor(btnCabinetNameNote, !scheme.cabinetNameNote.isNullOrEmpty())
         updateNoteIconColor(btnSwitchesNameNote, !scheme.switchesNameNote.isNullOrEmpty())
         updateNoteIconColor(btnInventoryNumberNote, !scheme.inventoryNumberNote.isNullOrEmpty())
@@ -646,7 +644,6 @@ class CabinetDetailActivity : AppCompatActivity() {
         statusMap["heating"] = if (scheme.heating) 0 else 1
         statusMap["grounding"] = if (scheme.grounding) 0 else 1
 
-        // Устанавливаем значения в спиннеры без вызова onItemSelected
         setSpinnerSelectionWithoutCallback(spinnerCabinetName, statusMap["cabinetName"] ?: 0)
         setSpinnerSelectionWithoutCallback(spinnerSwitchesName, statusMap["switchesName"] ?: 0)
         setSpinnerSelectionWithoutCallback(spinnerInventoryNumber, statusMap["inventoryNumber"] ?: 0)

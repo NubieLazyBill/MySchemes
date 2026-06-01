@@ -675,7 +675,7 @@ class MainActivity : AppCompatActivity() {
                 allSchemes[index] = updated
                 repository.saveSchemes(allSchemes)
                 loadSchemes()
-                val message = if (isInspected) "✓ Отмечено как осмотрено" else "✗ Отметка снята"
+                val message = if (isInspected) "✓ осмотрено" else "✗ не осмотрено"
                 Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
             }
         }
