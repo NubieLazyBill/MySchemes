@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
@@ -16,7 +17,8 @@ import java.util.*
 class SchemeAdapter(
     private var schemes: List<Scheme>,
     private val onItemClick: (Scheme) -> Unit,
-    private val onAllPhotosClick: (Scheme) -> Unit   // ← НОВЫЙ КОЛБЭК
+    private val onAllPhotosClick: (Scheme) -> Unit,
+    private val onInspectedClick: (Scheme, Boolean) -> Unit  // ← новый колбэк
 ) : RecyclerView.Adapter<SchemeAdapter.SchemeViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SchemeViewHolder {
@@ -26,7 +28,7 @@ class SchemeAdapter(
     }
 
     override fun onBindViewHolder(holder: SchemeViewHolder, position: Int) {
-        holder.bind(schemes[position], onItemClick, onAllPhotosClick)
+        holder.bind(schemes[position], onItemClick, onAllPhotosClick, onInspectedClick)
     }
 
     override fun getItemCount() = schemes.size
@@ -43,8 +45,15 @@ class SchemeAdapter(
         private val tvStatus: TextView = itemView.findViewById(R.id.tvStatus)
         private val cardView: CardView = itemView as CardView
         private val btnAllPhotos: ImageButton = itemView.findViewById(R.id.btnAllPhotos)
+        private val btnInspected: ImageButton = itemView.findViewById(R.id.btnInspected)
+        private val ivInspected: ImageView = itemView.findViewById(R.id.ivInspected)
 
-        fun bind(scheme: Scheme, onItemClick: (Scheme) -> Unit, onAllPhotosClick: (Scheme) -> Unit) {
+        fun bind(
+            scheme: Scheme,
+            onItemClick: (Scheme) -> Unit,
+            onAllPhotosClick: (Scheme) -> Unit,
+            onInspectedClick: (Scheme, Boolean) -> Unit
+        ) {
             val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
             tvEquipmentName.text = scheme.equipmentName
@@ -63,12 +72,24 @@ class SchemeAdapter(
             tvStatus.setBackgroundColor(bgColor)
             tvStatus.setTextColor(textColor)
 
+            // Отображаем статус осмотра
+            if (scheme.isInspected) {
+                ivInspected.visibility = View.VISIBLE
+                btnInspected.setImageResource(android.R.drawable.checkbox_on_background)
+            } else {
+                ivInspected.visibility = View.GONE
+                btnInspected.setImageResource(android.R.drawable.checkbox_off_background)
+            }
+
             cardView.setOnClickListener { onItemClick(scheme) }
             btnAllPhotos.setOnClickListener { onAllPhotosClick(scheme) }
+            btnInspected.setOnClickListener {
+                val newState = !scheme.isInspected
+                onInspectedClick(scheme, newState)
+            }
         }
 
         private fun getStatusInfo(scheme: Scheme): Triple<String, Int, Int> {
-            // Если схема не требуется
             if (!scheme.hasScheme) {
                 return Triple(
                     "📄 Не требуется",
@@ -76,7 +97,6 @@ class SchemeAdapter(
                     Color.parseColor("#999999")
                 )
             }
-            // Если схема есть, но даты не заполнены
             if (scheme.lastRevisionDate == 0L || scheme.nextRevisionDate == 0L) {
                 return Triple(
                     "📄 Нет схемы",

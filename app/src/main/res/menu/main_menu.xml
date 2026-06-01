@@ -44,4 +44,10 @@
         android:icon="@android:drawable/ic_menu_preferences"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/action_reset_inspected"
+        android:title="🔄 Сбросить отметки"
+        android:icon="@android:drawable/ic_menu_delete"
+        app:showAsAction="never" />
+
 </menu>

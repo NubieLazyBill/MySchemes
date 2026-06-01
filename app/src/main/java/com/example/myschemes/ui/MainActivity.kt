@@ -79,6 +79,9 @@ class MainActivity : AppCompatActivity() {
             },
             onAllPhotosClick = { scheme ->
                 showAllPhotosForScheme(scheme)
+            },
+            onInspectedClick = { scheme, newState ->
+                updateInspectedStatus(scheme, newState)
             }
         )
 
@@ -137,6 +140,10 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.action_import_csv -> {
                 importSchemes()  // ← вызывает диалог подтверждения
+                true
+            }
+            R.id.action_reset_inspected -> {
+                showResetInspectedDialog()
                 true
             }
             R.id.action_test_notification -> {
@@ -633,6 +640,42 @@ class MainActivity : AppCompatActivity() {
         allPhotos.addAll(scheme.heatingPhotos)
         allPhotos.addAll(scheme.groundingPhotos)
         return allPhotos
+    }
+
+    private fun updateInspectedStatus(scheme: Scheme, isInspected: Boolean) {
+        lifecycleScope.launch {
+            val allSchemes = repository.getAllSchemes().toMutableList()
+            val index = allSchemes.indexOfFirst { it.id == scheme.id }
+            if (index != -1) {
+                val updated = allSchemes[index].copy(isInspected = isInspected)
+                allSchemes[index] = updated
+                repository.saveSchemes(allSchemes)
+                loadSchemes()
+                val message = if (isInspected) "✓ Отмечено как осмотрено" else "✗ Отметка снята"
+                Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showResetInspectedDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Сбросить отметки")
+            .setMessage("Вы уверены, что хотите снять все отметки \"Осмотрено\" со всех шкафов?")
+            .setPositiveButton("Да, сбросить") { _, _ ->
+                resetAllInspected()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun resetAllInspected() {
+        lifecycleScope.launch {
+            val allSchemes = repository.getAllSchemes().toMutableList()
+            val updatedSchemes = allSchemes.map { it.copy(isInspected = false) }
+            repository.saveSchemes(updatedSchemes)
+            loadSchemes()
+            Toast.makeText(this@MainActivity, "Все отметки сброшены", Toast.LENGTH_SHORT).show()
+        }
     }
 
 }

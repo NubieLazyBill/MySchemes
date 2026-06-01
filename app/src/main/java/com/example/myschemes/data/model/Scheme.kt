@@ -32,6 +32,7 @@ data class Scheme(
     val painting: Boolean = false,
     val heating: Boolean = false,
     val grounding: Boolean = false,
+    val isInspected: Boolean = false,
 
     // Фото для каждого пункта (список путей)
     val cabinetNamePhotos: List<String> = emptyList(),
