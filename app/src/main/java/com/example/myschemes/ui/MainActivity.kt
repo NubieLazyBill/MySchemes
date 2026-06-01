@@ -49,6 +49,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var repository: SchemeRepository
     private var currentSortMode = 0
 
+    private var currentCellFilter: String? = null  // ← фильтр по ячейке
+
     companion object {
         private const val REQUEST_IMPORT_EXCEL = 1002
     }
@@ -157,6 +159,14 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.action_notification_settings -> {
                 showNotificationSettingsDialog()
+                true
+            }
+            R.id.action_filter_by_cell -> {
+                showCellFilterDialog()
+                true
+            }
+            R.id.action_clear_filter -> {
+                clearCellFilter()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -290,7 +300,8 @@ class MainActivity : AppCompatActivity() {
                 recyclerView.visibility = android.view.View.VISIBLE
                 tvEmpty.visibility = android.view.View.GONE
                 adapter.updateData(sortedSchemes)
-                tvCounter.text = "Всего шкафов: ${sortedSchemes.size}"
+                val filterText = if (currentCellFilter != null) " (ячейка: ${currentCellFilter})" else ""
+                tvCounter.text = "Всего шкафов: ${sortedSchemes.size}$filterText"
             }
         }
     }
@@ -577,7 +588,8 @@ class MainActivity : AppCompatActivity() {
             "📛 По наименованию (А-Я)",
             "📅 По дате пересмотра (сначала срочные)",
             "🔴 По статусу (просрочены → скоро → активны → нет схемы)",
-            "🗄️ По ячейке"
+            "🗄️ По ячейке",
+            "✅ Сначала неосмотренные"
         )
 
         AlertDialog.Builder(this)
@@ -590,20 +602,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sortSchemes(schemes: List<Scheme>): List<Scheme> {
+        // Сначала фильтруем по ячейке
+        val filtered = if (currentCellFilter != null) {
+            schemes.filter { it.cellNumber == currentCellFilter }
+        } else {
+            schemes
+        }
+
+        // Затем сортируем
         return when (currentSortMode) {
-            0 -> schemes.sortedBy { it.equipmentName.lowercase() }
-            1 -> schemes.sortedBy {
+            0 -> filtered.sortedBy { it.equipmentName.lowercase() }
+            1 -> filtered.sortedBy {
                 if (it.nextRevisionDate == 0L) Long.MAX_VALUE else it.nextRevisionDate
             }
-            2 -> schemes.sortedWith(compareBy(
+            2 -> filtered.sortedWith(compareBy(
                 { it.getStatus().ordinal },
                 { it.equipmentName.lowercase() }
             ))
-            3 -> schemes.sortedWith(compareBy(
+            3 -> filtered.sortedWith(compareBy(
                 { it.cellNumber ?: "" },
                 { it.equipmentName.lowercase() }
             ))
-            else -> schemes
+            4 -> filtered.sortedWith(compareBy(
+                { if (it.isInspected) 1 else 0 },  // false (0) сначала, true (1) потом
+                { it.equipmentName.lowercase() }
+            ))
+            else -> filtered
         }
     }
 
@@ -676,6 +700,38 @@ class MainActivity : AppCompatActivity() {
             loadSchemes()
             Toast.makeText(this@MainActivity, "Все отметки сброшены", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun showCellFilterDialog() {
+        lifecycleScope.launch {
+            val allSchemes = repository.getAllSchemes()
+            val cells = allSchemes.mapNotNull { it.cellNumber?.takeIf { it.isNotBlank() } }.distinct().sorted()
+
+            if (cells.isEmpty()) {
+                Toast.makeText(this@MainActivity, "Нет шкафов с указанными ячейками", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            val cellOptions = listOf("Все ячейки") + cells
+            AlertDialog.Builder(this@MainActivity)
+                .setTitle("Выберите ячейку")
+                .setItems(cellOptions.toTypedArray()) { _, which ->
+                    if (which == 0) {
+                        clearCellFilter()
+                    } else {
+                        currentCellFilter = cellOptions[which]
+                        loadSchemes()
+                        supportActionBar?.subtitle = "Ячейка: ${currentCellFilter}"
+                    }
+                }
+                .show()
+        }
+    }
+
+    private fun clearCellFilter() {
+        currentCellFilter = null
+        loadSchemes()
+        supportActionBar?.subtitle = null
     }
 
 }

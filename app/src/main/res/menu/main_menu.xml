@@ -1,53 +1,54 @@
-<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
         android:id="@+id/action_add_scheme"
-        android:title="➕ Добавить шкаф"
-        android:icon="@android:drawable/ic_input_add"
-        app:showAsAction="never" />
+        android:title="➕ Добавить"
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/action_sort"
         android:title="📊 Сортировка"
-        android:icon="@android:drawable/ic_menu_sort_by_size"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
 
     <item
-        android:id="@+id/action_import_csv"
-        android:title="📥 Импорт из CSV"
-        android:icon="@android:drawable/ic_menu_save"
+        android:id="@+id/action_filter_by_cell"
+        android:title="🔍 Фильтр по ячейке"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_clear_filter"
+        android:title="❌ Сбросить фильтр"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_import_excel"
-        android:title="📂 Импорт из Excel (добавить)"
-        android:icon="@android:drawable/ic_menu_upload"
+        android:title="📥 Импорт Excel"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_import_csv"
+        android:title="📥 Импорт CSV"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_export_report"
-        android:title="📊 Создать отчёт"
-        android:icon="@android:drawable/ic_menu_share"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/action_test_notification"
-        android:title="🔔 Тест уведомления"
-        android:icon="@android:drawable/ic_dialog_info"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/action_notification_settings"
-        android:title="⚙️ Настройка уведомлений"
-        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="📤 Экспорт отчёта"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_reset_inspected"
         android:title="🔄 Сбросить отметки"
-        android:icon="@android:drawable/ic_menu_delete"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_notification_settings"
+        android:title="🔔 Уведомления"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_test_notification"
+        android:title="📢 Тест уведомления"
         app:showAsAction="never" />
 
 </menu>
