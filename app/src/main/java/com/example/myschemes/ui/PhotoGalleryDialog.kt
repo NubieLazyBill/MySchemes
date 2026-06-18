@@ -36,7 +36,8 @@ class PhotoGalleryDialog(
 
         val view = LayoutInflater.from(activity).inflate(R.layout.dialog_photo_gallery, null)
         listView = view.findViewById(R.id.listViewPhotos)
-        val btnAdd = view.findViewById<Button>(R.id.btnAddPhoto)
+        val btnTakePhoto = view.findViewById<Button>(R.id.btnTakePhoto)
+        val btnPickFromGallery = view.findViewById<Button>(R.id.btnPickFromGallery)
 
         adapter = PhotoListAdapter(activity, photos)
         listView.adapter = adapter
@@ -50,8 +51,12 @@ class PhotoGalleryDialog(
             true
         }
 
-        btnAdd.setOnClickListener {
-            showAddPhotoOptions()
+        btnTakePhoto.setOnClickListener {
+            takePhoto()
+        }
+
+        btnPickFromGallery.setOnClickListener {
+            pickFromGallery()
         }
 
         AlertDialog.Builder(activity)
@@ -67,19 +72,6 @@ class PhotoGalleryDialog(
 
     fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         photoHelper.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
-    private fun showAddPhotoOptions() {
-        val options = arrayOf("📷 Сделать фото", "🖼️ Выбрать из галереи", "❌ Отмена")
-        AlertDialog.Builder(activity)
-            .setTitle("Добавить фото")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> takePhoto()
-                    1 -> pickFromGallery()
-                }
-            }
-            .show()
     }
 
     private fun takePhoto() {
@@ -115,7 +107,6 @@ class PhotoGalleryDialog(
             .show()
     }
 
-    // ТОЛЬКО ОДИН КЛАСС PhotoListAdapter (правильная версия)
     inner class PhotoListAdapter(
         private val context: android.content.Context,
         private val photoList: List<String>
@@ -135,10 +126,8 @@ class PhotoGalleryDialog(
             val photoPath = photoList[position]
             val file = File(photoPath)
 
-            // Получаем имя файла без расширения
             val fileName = file.nameWithoutExtension
 
-            // Ищем дату в конце имени файла (8 цифр подряд)
             val datePattern = Regex("(\\d{8})(?:_\\d{6})?$")
             val dateMatch = datePattern.find(fileName)
 
@@ -146,14 +135,11 @@ class PhotoGalleryDialog(
                 val datePart = dateMatch.groupValues[1]
                 val beforeDate = fileName.substring(0, dateMatch.range.first).trimEnd('_')
 
-                // Ищем разделитель |
                 val separatorIndex = beforeDate.indexOf('|')
 
                 val checkpointName = if (separatorIndex != -1) {
-                    // Берём всё ПОСЛЕ | и заменяем _ на пробелы
                     beforeDate.substring(separatorIndex + 1).replace("_", " ")
                 } else {
-                    // Для старых файлов (без |) - пробуем старый способ
                     val segments = beforeDate.split("_")
                     if (segments.size > 1) {
                         segments.drop(1).joinToString(" ")
@@ -170,7 +156,6 @@ class PhotoGalleryDialog(
 
                 "$checkpointName\n$formattedDate"
             } else {
-                // Для старых фото - только дата из файла
                 val lastModified = Date(file.lastModified())
                 val dateFormat = SimpleDateFormat("yyyy.MM.dd", Locale.getDefault())
                 dateFormat.format(lastModified)
@@ -181,7 +166,6 @@ class PhotoGalleryDialog(
             text1.maxLines = 2
             text1.textSize = 14f
 
-            // Загружаем миниатюру
             loadThumbnail(photoPath) { bitmap ->
                 val drawable = android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
                 drawable.setBounds(0, 0, 280, 200)

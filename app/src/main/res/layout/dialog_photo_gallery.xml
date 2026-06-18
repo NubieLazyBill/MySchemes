@@ -12,9 +12,23 @@
         android:layout_marginBottom="16dp" />
 
     <Button
-        android:id="@+id/btnAddPhoto"
+        android:id="@+id/btnTakePhoto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="➕ Добавить фото" />
+        android:text="📷 Сделать фото"
+        android:textSize="16sp"
+        android:padding="12dp"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnPickFromGallery"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🖼️ Выбрать из галереи"
+        android:textSize="12sp"
+        android:padding="8dp"
+        android:backgroundTint="#9E9E9E"
+        android:textColor="#FFFFFF"
+        style="@style/Widget.Material3.Button.OutlinedButton" />
 
 </LinearLayout>
