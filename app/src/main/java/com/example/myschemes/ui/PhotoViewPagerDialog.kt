@@ -1,14 +1,15 @@
 package com.example.myschemes.ui
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.myschemes.R
 import com.github.chrisbanes.photoview.PhotoView
@@ -27,6 +28,7 @@ class PhotoViewPagerDialog(
         val view = LayoutInflater.from(activity).inflate(R.layout.dialog_photo_view_pager, null)
         val viewPager = view.findViewById<ViewPager2>(R.id.viewPager)
         val btnClose = view.findViewById<ImageButton>(R.id.btnClose)
+        val btnShare = view.findViewById<ImageButton>(R.id.btnShare)
         val tvCounter = view.findViewById<TextView>(R.id.tvPhotoCounter)
 
         val adapter = PhotoPagerAdapter(photoPaths)
@@ -42,15 +44,21 @@ class PhotoViewPagerDialog(
             }
         })
 
-        // СОЗДАЁМ ДИАЛОГ
         val dialog = AlertDialog.Builder(activity)
             .setView(view)
             .setCancelable(true)
             .create()
 
-        // ПРОСТО ЗАКРЫВАЕМ ДИАЛОГ
         btnClose.setOnClickListener {
             dialog.dismiss()
+        }
+
+        // Кнопка "Поделиться"
+        btnShare.setOnClickListener {
+            val currentPosition = viewPager.currentItem
+            if (currentPosition in photoPaths.indices) {
+                sharePhoto(photoPaths[currentPosition])
+            }
         }
 
         dialog.show()
@@ -58,6 +66,33 @@ class PhotoViewPagerDialog(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
+    }
+
+    private fun sharePhoto(photoPath: String) {
+        try {
+            val file = File(photoPath)
+            if (!file.exists()) {
+                android.widget.Toast.makeText(activity, "Файл не найден", android.widget.Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val uri = FileProvider.getUriForFile(
+                activity,
+                "${activity.packageName}.fileprovider",
+                file
+            )
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/jpeg"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            activity.startActivity(Intent.createChooser(shareIntent, "Отправить фото"))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            android.widget.Toast.makeText(activity, "Ошибка отправки: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     inner class PhotoPagerAdapter(private val paths: List<String>) :
@@ -93,7 +128,25 @@ class PhotoViewPagerDialog(
                 photoView.maximumScale = 5.0f
                 photoView.minimumScale = 0.8f
                 photoView.mediumScale = 1.5f
+
+                // Долгое нажатие — меню (отправить/удалить)
+                photoView.setOnLongClickListener {
+                    showPhotoMenu(photoPath)
+                    true
+                }
             }
         }
+    }
+
+    private fun showPhotoMenu(photoPath: String) {
+        val options = arrayOf("📤 Отправить", "❌ Отмена")
+        AlertDialog.Builder(activity)
+            .setTitle("Действия с фото")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> sharePhoto(photoPath)
+                }
+            }
+            .show()
     }
 }

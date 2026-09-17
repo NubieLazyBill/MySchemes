@@ -15,6 +15,7 @@ import com.example.myschemes.utils.PhotoHelper
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.core.content.FileProvider
 
 class PhotoGalleryDialog(
     private val activity: AppCompatActivity,
@@ -47,7 +48,7 @@ class PhotoGalleryDialog(
         }
 
         listView.setOnItemLongClickListener { _, _, position, _ ->
-            showDeleteConfirm(position)
+            showPhotoMenu(position)  // ← стало
             true
         }
 
@@ -92,7 +93,48 @@ class PhotoGalleryDialog(
         }
     }
 
-    private fun showDeleteConfirm(position: Int) {
+    private fun showPhotoMenu(position: Int) {
+        val photoPath = photos[position]
+        val options = arrayOf("📤 Отправить", "🗑️ Удалить", "❌ Отмена")
+        AlertDialog.Builder(activity)
+            .setTitle("Действия с фото")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> sharePhoto(photoPath)
+                    1 -> confirmDelete(position)
+                }
+            }
+            .show()
+    }
+
+    private fun sharePhoto(photoPath: String) {
+        try {
+            val file = File(photoPath)
+            if (!file.exists()) {
+                android.widget.Toast.makeText(activity, "Файл не найден", android.widget.Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val uri = FileProvider.getUriForFile(
+                activity,
+                "${activity.packageName}.fileprovider",
+                file
+            )
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/jpeg"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            activity.startActivity(Intent.createChooser(shareIntent, "Отправить фото"))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            android.widget.Toast.makeText(activity, "Ошибка отправки: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun confirmDelete(position: Int) {
         AlertDialog.Builder(activity)
             .setTitle("Удалить фото")
             .setMessage("Вы уверены?")
