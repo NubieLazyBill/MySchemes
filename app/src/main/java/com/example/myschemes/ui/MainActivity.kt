@@ -39,6 +39,10 @@ import org.apache.poi.ss.usermodel.IndexedColors
 import androidx.activity.result.contract.ActivityResultContracts
 import org.apache.poi.ss.usermodel.CellType
 import com.example.myschemes.ui.PhotoViewPagerDialog
+import org.apache.poi.ss.usermodel.HorizontalAlignment
+import org.apache.poi.ss.usermodel.VerticalAlignment
+import kotlinx.coroutines.withContext
+import com.example.myschemes.utils.PhotoMigrationHelper
 
 class MainActivity : AppCompatActivity() {
 
@@ -169,7 +173,62 @@ class MainActivity : AppCompatActivity() {
                 clearCellFilter()
                 true
             }
+            R.id.action_migrate_photos -> {
+                showMigrationDialog()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun showMigrationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("⚠️ Обновить подписи на фото")
+            .setMessage("На все старые фото будут добавлены подписи с названием шкафа, пункта и примечания.\n\nВнимание: это может занять несколько минут и необратимо изменит фото.\n\nПродолжить?")
+            .setPositiveButton("Да, обновить") { _, _ ->
+                migrateAllPhotos()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun migrateAllPhotos() {
+        lifecycleScope.launch {
+            val allSchemes = repository.getAllSchemes()
+            var totalProcessed = 0
+            var currentScheme = 0
+
+            val progressDialog = android.app.ProgressDialog(this@MainActivity).apply {
+                setTitle("Обновление фото")
+                setMessage("Обработка...")
+                setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL)
+                max = allSchemes.size
+                show()
+            }
+
+            withContext(kotlinx.coroutines.Dispatchers.IO) {
+                allSchemes.forEach { scheme ->
+                    val count = PhotoMigrationHelper.migratePhotosForScheme(
+                        context = applicationContext,
+                        scheme = scheme
+                    ) { current, total ->
+                        // Обновление прогресса внутри шкафа (опционально)
+                    }
+                    totalProcessed += count
+                    currentScheme++
+                    withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        progressDialog.progress = currentScheme
+                        progressDialog.setMessage("Обработано шкафов: $currentScheme из ${allSchemes.size}\nФото: $totalProcessed")
+                    }
+                }
+            }
+
+            progressDialog.dismiss()
+            Toast.makeText(
+                this@MainActivity,
+                "Готово! Обработано фото: $totalProcessed",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -364,7 +423,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun createExcelFile(schemes: List<Scheme>): File? {
         return try {
-            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())  // ← объявляем в самом начале
+            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             val timeStamp = SimpleDateFormat("dd.MM.yyyy_HH-mm", Locale.getDefault()).format(Date())
             val fileName = "Осмотр ШКС_$timeStamp.xlsx"
             val file = File(cacheDir, fileName)
@@ -372,24 +431,28 @@ class MainActivity : AppCompatActivity() {
             val workbook = XSSFWorkbook()
             val sheet = workbook.createSheet("Шкафы")
 
-            // Стиль для заголовков
+            // Стиль для заголовков - тёмно-зелёный фон
             val headerFont = workbook.createFont().apply {
                 bold = true
                 color = IndexedColors.WHITE.index
             }
             val headerStyle = workbook.createCellStyle().apply {
-                fillForegroundColor = IndexedColors.LIGHT_GREEN.index
+                fillForegroundColor = IndexedColors.DARK_GREEN.index
                 fillPattern = FillPatternType.SOLID_FOREGROUND
                 setFont(headerFont)
+                alignment = HorizontalAlignment.CENTER
+                verticalAlignment = VerticalAlignment.CENTER
+                wrapText = true
             }
 
-            // Стиль для статусов
+            // Стиль для статусов +/-
             val plusFont = workbook.createFont().apply {
                 bold = true
                 color = IndexedColors.GREEN.index
             }
             val plusStyle = workbook.createCellStyle().apply {
                 setFont(plusFont)
+                alignment = HorizontalAlignment.CENTER
             }
 
             val minusFont = workbook.createFont().apply {
@@ -398,25 +461,56 @@ class MainActivity : AppCompatActivity() {
             }
             val minusStyle = workbook.createCellStyle().apply {
                 setFont(minusFont)
+                alignment = HorizontalAlignment.CENTER
             }
 
-            // Заголовки
+            // Стиль для обычных ячеек с переносом текста
+            val wrapStyle = workbook.createCellStyle().apply {
+                wrapText = true
+                verticalAlignment = VerticalAlignment.TOP
+            }
+
+            // Заголовки - теперь для каждого пункта СВОЯ колонка "Статус" и "Примечание"
             val headers = listOf(
                 "Наименование оборудования",
                 "Ячейка",
+                // 1. Диспетчерское наименование
                 "Диспетчерское наименование",
+                "Примечание",
+                // 2. ДН автоматов, рубильников
                 "ДН автоматов, рубильников",
+                "Примечание",
+                // 3. Инвентарный номер
                 "Инвентарный номер",
+                "Примечание",
+                // 4. Целостность замков
                 "Целостность замков",
+                "Примечание",
+                // 5. Уплотнение шкафа
                 "Уплотнение шкафа",
+                "Примечание",
+                // 6. Заходы кабелей
                 "Заходы кабелей",
+                "Примечание",
+                // 7. Нет оголённых жил
                 "Нет оголённых жил",
+                "Примечание",
+                // 8. Адресные бирки
                 "Адресные бирки",
+                "Примечание",
+                // 9. Целостность клеммников
                 "Целостность клеммников",
+                "Примечание",
+                // 10. Окраска
                 "Окраска",
+                "Примечание",
+                // 11. Обогрев
                 "Обогрев",
+                "Примечание",
+                // 12. Заземление
                 "Заземление",
                 "Примечание",
+                // Схема
                 "Номер схемы",
                 "Дата схемы",
                 "Дата пересмотра"
@@ -427,7 +521,7 @@ class MainActivity : AppCompatActivity() {
                 val cell = headerRow.createCell(index)
                 cell.setCellValue(header)
                 cell.cellStyle = headerStyle
-                sheet.setColumnWidth(index, (header.length * 256).coerceIn(3000, 15000))
+                sheet.setColumnWidth(index, if (header == "Примечание") 5000 else 4000)
             }
 
             // Данные
@@ -439,39 +533,50 @@ class MainActivity : AppCompatActivity() {
                 row.createCell(colIndex++).setCellValue(scheme.equipmentName)
                 row.createCell(colIndex++).setCellValue(scheme.cellNumber ?: "")
 
-                // Пункты чек-листа
-                listOf(
-                    scheme.cabinetNameChecked,
-                    scheme.switchesNameChecked,
-                    scheme.inventoryNumberChecked,
-                    scheme.lockIntegrity,
-                    scheme.sealIntegrity,
-                    scheme.cableEntries,
-                    scheme.noBareWires,
-                    scheme.addressLabels,
-                    scheme.terminalsIntegrity,
-                    scheme.painting,
-                    scheme.heating,
-                    scheme.grounding
-                ).forEach { checked ->
-                    val cell = row.createCell(colIndex++)
-                    cell.setCellValue(if (checked) "+" else "-")
-                    cell.cellStyle = if (checked) plusStyle else minusStyle
+                // Функция для добавления статуса и примечания
+                fun addStatusAndNote(checked: Boolean, note: String?) {
+                    val statusCell = row.createCell(colIndex++)
+                    statusCell.setCellValue(if (checked) "+" else "-")
+                    statusCell.cellStyle = if (checked) plusStyle else minusStyle
+
+                    val noteCell = row.createCell(colIndex++)
+                    noteCell.setCellValue(note ?: "")
+                    noteCell.cellStyle = wrapStyle
                 }
 
-                // Примечание
-                val notes = listOfNotNull(
-                    scheme.cabinetNameNote, scheme.switchesNameNote, scheme.inventoryNumberNote,
-                    scheme.lockIntegrityNote, scheme.sealIntegrityNote, scheme.cableEntriesNote,
-                    scheme.noBareWiresNote, scheme.addressLabelsNote, scheme.terminalsIntegrityNote,
-                    scheme.paintingNote, scheme.heatingNote, scheme.groundingNote
-                ).filter { it.isNotBlank() }
-                row.createCell(colIndex++).setCellValue(notes.joinToString("; "))
+                // 1. Диспетчерское наименование
+                addStatusAndNote(scheme.cabinetNameChecked, scheme.cabinetNameNote)
+                // 2. ДН автоматов, рубильников
+                addStatusAndNote(scheme.switchesNameChecked, scheme.switchesNameNote)
+                // 3. Инвентарный номер
+                addStatusAndNote(scheme.inventoryNumberChecked, scheme.inventoryNumberNote)
+                // 4. Целостность замков
+                addStatusAndNote(scheme.lockIntegrity, scheme.lockIntegrityNote)
+                // 5. Уплотнение шкафа
+                addStatusAndNote(scheme.sealIntegrity, scheme.sealIntegrityNote)
+                // 6. Заходы кабелей
+                addStatusAndNote(scheme.cableEntries, scheme.cableEntriesNote)
+                // 7. Нет оголённых жил
+                addStatusAndNote(scheme.noBareWires, scheme.noBareWiresNote)
+                // 8. Адресные бирки
+                addStatusAndNote(scheme.addressLabels, scheme.addressLabelsNote)
+                // 9. Целостность клеммников
+                addStatusAndNote(scheme.terminalsIntegrity, scheme.terminalsIntegrityNote)
+                // 10. Окраска
+                addStatusAndNote(scheme.painting, scheme.paintingNote)
+                // 11. Обогрев
+                addStatusAndNote(scheme.heating, scheme.heatingNote)
+                // 12. Заземление
+                addStatusAndNote(scheme.grounding, scheme.groundingNote)
 
-                // Поля схемы (в конец)
+                // Поля схемы
                 row.createCell(colIndex++).setCellValue(scheme.schemeNumber ?: "")
-                row.createCell(colIndex++).setCellValue(if (scheme.lastRevisionDate != 0L) dateFormat.format(Date(scheme.lastRevisionDate)) else "")
-                row.createCell(colIndex).setCellValue(if (scheme.nextRevisionDate != 0L) dateFormat.format(Date(scheme.nextRevisionDate)) else "")
+                row.createCell(colIndex++).setCellValue(
+                    if (scheme.lastRevisionDate != 0L) dateFormat.format(Date(scheme.lastRevisionDate)) else ""
+                )
+                row.createCell(colIndex).setCellValue(
+                    if (scheme.nextRevisionDate != 0L) dateFormat.format(Date(scheme.nextRevisionDate)) else ""
+                )
             }
 
             workbook.write(file.outputStream())

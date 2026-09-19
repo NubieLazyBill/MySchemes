@@ -51,4 +51,9 @@
         android:title="📢 Тест уведомления"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/action_migrate_photos"
+        android:title="🖼️ Обновить подписи на фото"
+        app:showAsAction="never" />
+
 </menu>

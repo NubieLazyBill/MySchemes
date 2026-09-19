@@ -21,7 +21,8 @@ class PhotoGalleryDialog(
     private val activity: AppCompatActivity,
     private val title: String,
     private val photos: MutableList<String>,
-    private val onPhotosChanged: (List<String>) -> Unit
+    private val onPhotosChanged: (List<String>) -> Unit,
+    private val note: String? = null
 ) {
 
     private lateinit var photoHelper: PhotoHelper
@@ -76,7 +77,7 @@ class PhotoGalleryDialog(
     }
 
     private fun takePhoto() {
-        photoHelper.takePhoto(equipmentName, checkpointTitle) { path ->
+        photoHelper.takePhoto(equipmentName, checkpointTitle, note) { path ->
             android.util.Log.d("PhotoGallery", "Фото получено: $path")
             photos.add(path)
             adapter.notifyDataSetChanged()
@@ -85,7 +86,7 @@ class PhotoGalleryDialog(
     }
 
     private fun pickFromGallery() {
-        photoHelper.pickFromGallery(equipmentName, checkpointTitle) { path ->
+        photoHelper.pickFromGallery(equipmentName, checkpointTitle, note) { path ->
             android.util.Log.d("PhotoGallery", "Фото из галереи сохранено: $path")
             photos.add(path)
             adapter.notifyDataSetChanged()

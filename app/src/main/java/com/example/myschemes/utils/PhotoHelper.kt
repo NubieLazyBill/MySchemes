@@ -27,10 +27,17 @@ class PhotoHelper(private val activity: AppCompatActivity) {
     private var currentCallback: ((String) -> Unit)? = null
     private var currentEquipmentName: String = ""
     private var currentCheckpointName: String = ""
+    private var currentNote: String? = null
 
-    fun takePhoto(equipmentName: String, checkpointName: String, onPhotoTaken: (String) -> Unit) {
+    fun takePhoto(
+        equipmentName: String,
+        checkpointName: String,
+        note: String? = null,
+        onPhotoTaken: (String) -> Unit
+    ) {
         currentEquipmentName = equipmentName
         currentCheckpointName = checkpointName
+        currentNote = note
         currentCallback = onPhotoTaken
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -61,9 +68,15 @@ class PhotoHelper(private val activity: AppCompatActivity) {
         }
     }
 
-    fun pickFromGallery(equipmentName: String, checkpointName: String, onPhotoSelected: (String) -> Unit) {
+    fun pickFromGallery(
+        equipmentName: String,
+        checkpointName: String,
+        note: String? = null,
+        onPhotoSelected: (String) -> Unit
+    ) {
         currentEquipmentName = equipmentName
         currentCheckpointName = checkpointName
+        currentNote = note
         currentCallback = onPhotoSelected
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         activity.startActivityForResult(intent, REQUEST_GALLERY)
@@ -100,8 +113,16 @@ class PhotoHelper(private val activity: AppCompatActivity) {
             when (requestCode) {
                 REQUEST_IMAGE_CAPTURE -> {
                     android.util.Log.d("PhotoHelper", "Фото с камеры: $currentPhotoPath")
-                    currentPhotoPath?.let {
-                        currentCallback?.invoke(it)
+                    currentPhotoPath?.let { path ->
+                        // Добавляем подписи на фото
+                        val processedPath = PhotoWatermarkHelper.addWatermark(
+                            activity,
+                            path,
+                            currentEquipmentName,
+                            currentCheckpointName,
+                            currentNote
+                        ) ?: path
+                        currentCallback?.invoke(processedPath)
                     }
                 }
                 REQUEST_GALLERY -> {
@@ -115,7 +136,15 @@ class PhotoHelper(private val activity: AppCompatActivity) {
                             currentCheckpointName
                         )
                         savedPath?.let { path ->
-                            currentCallback?.invoke(path)
+                            // Добавляем подписи на фото
+                            val processedPath = PhotoWatermarkHelper.addWatermark(
+                                activity,
+                                path,
+                                currentEquipmentName,
+                                currentCheckpointName,
+                                currentNote
+                            ) ?: path
+                            currentCallback?.invoke(processedPath)
                         }
                     }
                 }
@@ -128,7 +157,7 @@ class PhotoHelper(private val activity: AppCompatActivity) {
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 currentCallback?.let {
-                    takePhoto(currentEquipmentName, currentCheckpointName, it)
+                    takePhoto(currentEquipmentName, currentCheckpointName, currentNote, it)
                 }
             } else {
                 currentCallback = null

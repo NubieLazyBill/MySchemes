@@ -410,7 +410,8 @@ class CabinetDetailActivity : AppCompatActivity() {
             onPhotosChanged = { updatedPhotos ->
                 photosMap[key] = updatedPhotos.toMutableList()
                 autoSave()
-            }
+            },
+            note = notesMap[key]  // ← передаём примечание
         )
         currentPhotoDialog?.show(scheme?.equipmentName ?: "шкаф", title)
     }
