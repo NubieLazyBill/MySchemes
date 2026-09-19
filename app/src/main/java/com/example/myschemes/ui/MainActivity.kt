@@ -50,6 +50,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var repository: SchemeRepository
     private var currentSortMode = 0
 
+    private var searchQuery: String = ""
+
     private var currentCellFilter: String? = null  // ← фильтр по ячейке
 
     companion object {
@@ -120,6 +122,26 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
+
+        // Настройка поиска
+        val searchItem = menu?.findItem(R.id.action_search)
+        val searchView = searchItem?.actionView as? androidx.appcompat.widget.SearchView
+
+        searchView?.queryHint = "Поиск по шкафу, ячейке, схеме..."
+        searchView?.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                searchQuery = query ?: ""
+                loadSchemes()
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                searchQuery = newText ?: ""
+                loadSchemes()
+                return true
+            }
+        })
+
         return true
     }
 
@@ -292,12 +314,28 @@ class MainActivity : AppCompatActivity() {
             if (sortedSchemes.isEmpty()) {
                 recyclerView.visibility = android.view.View.GONE
                 tvEmpty.visibility = android.view.View.VISIBLE
+
+                // Если поиск активен, показываем другое сообщение
+                if (searchQuery.isNotBlank()) {
+                    tvEmpty.text = "🔍 Ничего не найдено по запросу \"$searchQuery\""
+                } else {
+                    tvEmpty.text = "📋 Список шкафов пуст"
+                }
                 tvCounter.text = "Всего шкафов: 0"
             } else {
                 recyclerView.visibility = android.view.View.VISIBLE
                 tvEmpty.visibility = android.view.View.GONE
                 adapter.updateData(sortedSchemes)
-                val filterText = if (currentCellFilter != null) " (ячейка: ${currentCellFilter})" else ""
+
+                // Формируем подпись с учётом фильтров
+                val filterParts = mutableListOf<String>()
+                if (searchQuery.isNotBlank()) filterParts.add("поиск: \"$searchQuery\"")
+                if (currentCellFilter != null) filterParts.add("ячейка: $currentCellFilter")
+
+                val filterText = if (filterParts.isNotEmpty()) {
+                    " (${filterParts.joinToString(", ")})"
+                } else ""
+
                 tvCounter.text = "Всего шкафов: ${sortedSchemes.size}$filterText"
             }
         }
@@ -615,14 +653,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sortSchemes(schemes: List<Scheme>): List<Scheme> {
-        // Сначала фильтруем по ячейке
-        val filtered = if (currentCellFilter != null) {
-            schemes.filter { it.cellNumber == currentCellFilter }
+        // 1. Фильтр по поиску
+        val searched = if (searchQuery.isNotBlank()) {
+            val q = searchQuery.lowercase().trim()
+            schemes.filter { scheme ->
+                scheme.equipmentName.lowercase().contains(q) ||
+                        (scheme.cellNumber?.lowercase()?.contains(q) == true) ||
+                        (scheme.schemeNumber?.lowercase()?.contains(q) == true)
+            }
         } else {
             schemes
         }
 
-        // Затем сортируем
+        // 2. Фильтр по ячейке
+        val filtered = if (currentCellFilter != null) {
+            searched.filter { it.cellNumber == currentCellFilter }
+        } else {
+            searched
+        }
+
+        // 3. Сортировка
         return when (currentSortMode) {
             0 -> filtered.sortedBy { it.equipmentName.lowercase() }
             1 -> filtered.sortedBy {
@@ -637,7 +687,7 @@ class MainActivity : AppCompatActivity() {
                 { it.equipmentName.lowercase() }
             ))
             4 -> filtered.sortedWith(compareBy(
-                { if (it.isInspected) 1 else 0 },  // false (0) сначала, true (1) потом
+                { if (it.isInspected) 1 else 0 },
                 { it.equipmentName.lowercase() }
             ))
             else -> filtered
