@@ -15,7 +15,6 @@ import com.example.myschemes.R
 import com.example.myschemes.data.database.SchemeDatabase
 import com.example.myschemes.data.model.Scheme
 import com.example.myschemes.data.repository.SchemeRepository
-import com.example.myschemes.utils.CsvImporter
 import com.example.myschemes.worker.NotificationWorker
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -41,8 +40,6 @@ import org.apache.poi.ss.usermodel.CellType
 import com.example.myschemes.ui.PhotoViewPagerDialog
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.VerticalAlignment
-import kotlinx.coroutines.withContext
-import com.example.myschemes.utils.PhotoMigrationHelper
 
 class MainActivity : AppCompatActivity() {
 
@@ -144,10 +141,6 @@ class MainActivity : AppCompatActivity() {
                 showAddSchemeDialog()
                 true
             }
-            R.id.action_import_csv -> {
-                importSchemes()  // ← вызывает диалог подтверждения
-                true
-            }
             R.id.action_reset_inspected -> {
                 showResetInspectedDialog()
                 true
@@ -173,62 +166,7 @@ class MainActivity : AppCompatActivity() {
                 clearCellFilter()
                 true
             }
-            R.id.action_migrate_photos -> {
-                showMigrationDialog()
-                true
-            }
             else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    private fun showMigrationDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("⚠️ Обновить подписи на фото")
-            .setMessage("На все старые фото будут добавлены подписи с названием шкафа, пункта и примечания.\n\nВнимание: это может занять несколько минут и необратимо изменит фото.\n\nПродолжить?")
-            .setPositiveButton("Да, обновить") { _, _ ->
-                migrateAllPhotos()
-            }
-            .setNegativeButton("Отмена", null)
-            .show()
-    }
-
-    private fun migrateAllPhotos() {
-        lifecycleScope.launch {
-            val allSchemes = repository.getAllSchemes()
-            var totalProcessed = 0
-            var currentScheme = 0
-
-            val progressDialog = android.app.ProgressDialog(this@MainActivity).apply {
-                setTitle("Обновление фото")
-                setMessage("Обработка...")
-                setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL)
-                max = allSchemes.size
-                show()
-            }
-
-            withContext(kotlinx.coroutines.Dispatchers.IO) {
-                allSchemes.forEach { scheme ->
-                    val count = PhotoMigrationHelper.migratePhotosForScheme(
-                        context = applicationContext,
-                        scheme = scheme
-                    ) { current, total ->
-                        // Обновление прогресса внутри шкафа (опционально)
-                    }
-                    totalProcessed += count
-                    currentScheme++
-                    withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        progressDialog.progress = currentScheme
-                        progressDialog.setMessage("Обработано шкафов: $currentScheme из ${allSchemes.size}\nФото: $totalProcessed")
-                    }
-                }
-            }
-
-            progressDialog.dismiss()
-            Toast.makeText(
-                this@MainActivity,
-                "Готово! Обработано фото: $totalProcessed",
-                Toast.LENGTH_LONG
-            ).show()
         }
     }
 
@@ -372,36 +310,6 @@ class MainActivity : AppCompatActivity() {
             prefs.edit().putBoolean("is_first_run", false).apply()
         }
         return isFirst
-    }
-
-    private fun importSchemes() {
-        AlertDialog.Builder(this)
-            .setTitle("📥 Импорт из CSV")
-            .setMessage("Внимание! Импорт заменит все текущие схемы данными из файла schemes.csv. Продолжить?")
-            .setPositiveButton("Да, импортировать") { _, _ ->
-                performImport()
-            }
-            .setNegativeButton("Отмена", null)
-            .show()
-    }
-
-    private fun performImport() {
-        lifecycleScope.launch {
-            try {
-                val importer = CsvImporter(applicationContext)
-                val schemes = importer.importFromAssets()
-                if (schemes.isNotEmpty()) {
-                    repository.saveSchemes(schemes)
-                    loadSchemes()
-                    Toast.makeText(this@MainActivity, "Импортировано ${schemes.size} схем", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this@MainActivity, "Нет данных для импорта", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(this@MainActivity, "Ошибка импорта: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
     private fun exportReport() {

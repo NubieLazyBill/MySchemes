@@ -77,12 +77,42 @@ class SchemeAdapter(
                 btnInspected.setImageResource(android.R.drawable.checkbox_off_background)
             }
 
+            // ===== КРАСИМ ИКОНКУ ФОТО В ЗЕЛЁНЫЙ, ЕСЛИ ЕСТЬ ФОТО =====
+            val hasPhotos = hasAnyPhotos(scheme)
+            updatePhotoIconColor(btnAllPhotos, hasPhotos)
+
             cardView.setOnClickListener { onItemClick(scheme) }
             btnAllPhotos.setOnClickListener { onAllPhotosClick(scheme) }
             btnInspected.setOnClickListener {
                 val newState = !scheme.isInspected
                 onInspectedClick(scheme, newState)
             }
+        }
+
+        /**
+         * Проверяет, есть ли хоть одно фото у шкафа
+         */
+        private fun hasAnyPhotos(scheme: Scheme): Boolean {
+            return scheme.cabinetNamePhotos.isNotEmpty() ||
+                    scheme.switchesNamePhotos.isNotEmpty() ||
+                    scheme.inventoryNumberPhotos.isNotEmpty() ||
+                    scheme.lockIntegrityPhotos.isNotEmpty() ||
+                    scheme.sealIntegrityPhotos.isNotEmpty() ||
+                    scheme.cableEntriesPhotos.isNotEmpty() ||
+                    scheme.noBareWiresPhotos.isNotEmpty() ||
+                    scheme.addressLabelsPhotos.isNotEmpty() ||
+                    scheme.terminalsIntegrityPhotos.isNotEmpty() ||
+                    scheme.paintingPhotos.isNotEmpty() ||
+                    scheme.heatingPhotos.isNotEmpty() ||
+                    scheme.groundingPhotos.isNotEmpty()
+        }
+
+        /**
+         * Красит иконку в зелёный, если есть фото, иначе — в серый
+         */
+        private fun updatePhotoIconColor(imageButton: ImageButton, hasPhotos: Boolean) {
+            val color = if (hasPhotos) Color.parseColor("#4CAF50") else Color.parseColor("#9E9E9E")
+            imageButton.setColorFilter(color)
         }
 
         private fun getStatusInfo(scheme: Scheme): Triple<String, Int, Int> {

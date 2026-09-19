@@ -101,6 +101,9 @@ class CabinetDetailActivity : AppCompatActivity() {
 
     private var currentPhotoDialog: PhotoGalleryDialog? = null
 
+    // Кнопка "Все фото"
+    private lateinit var btnAllPhotos: ImageButton  // ← ДОБАВЬТЕ ЭТУ СТРОКУ
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // ЗАПРЕЩАЕМ ПОВОРОТ ЭКРАНА
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -125,8 +128,7 @@ class CabinetDetailActivity : AppCompatActivity() {
 
     private fun initViews() {
 
-        lateinit var btnAllPhotos: ImageButton
-
+        // Кнопка "Все фото"
         btnAllPhotos = findViewById(R.id.btnAllPhotos)
         btnAllPhotos.setOnClickListener {
             showAllPhotos()
@@ -514,6 +516,7 @@ class CabinetDetailActivity : AppCompatActivity() {
                     updateNoteIconColor(btnGroundingNote, !updatedScheme.groundingNote.isNullOrEmpty())
 
                     // Обновляем цвета иконок фото
+                    updatePhotoIconColor(btnAllPhotos, getAllPhotosFromCurrentScheme().isNotEmpty())
                     updatePhotoIconColor(btnCabinetNamePhoto, photosMap["cabinetName"]?.isNotEmpty() == true)
                     updatePhotoIconColor(btnSwitchesNamePhoto, photosMap["switchesName"]?.isNotEmpty() == true)
                     updatePhotoIconColor(btnInventoryNumberPhoto, photosMap["inventoryNumber"]?.isNotEmpty() == true)
@@ -629,6 +632,21 @@ class CabinetDetailActivity : AppCompatActivity() {
         updatePhotoIconColor(btnPaintingPhoto, photosMap["painting"]?.isNotEmpty() == true)
         updatePhotoIconColor(btnHeatingPhoto, photosMap["heating"]?.isNotEmpty() == true)
         updatePhotoIconColor(btnGroundingPhoto, photosMap["grounding"]?.isNotEmpty() == true)
+        // Обновляем цвет иконки "Все фото"
+        val hasAnyPhotos = scheme.cabinetNamePhotos.isNotEmpty() ||
+                scheme.switchesNamePhotos.isNotEmpty() ||
+                scheme.inventoryNumberPhotos.isNotEmpty() ||
+                scheme.lockIntegrityPhotos.isNotEmpty() ||
+                scheme.sealIntegrityPhotos.isNotEmpty() ||
+                scheme.cableEntriesPhotos.isNotEmpty() ||
+                scheme.noBareWiresPhotos.isNotEmpty() ||
+                scheme.addressLabelsPhotos.isNotEmpty() ||
+                scheme.terminalsIntegrityPhotos.isNotEmpty() ||
+                scheme.paintingPhotos.isNotEmpty() ||
+                scheme.heatingPhotos.isNotEmpty() ||
+                scheme.groundingPhotos.isNotEmpty()
+
+        updatePhotoIconColor(btnAllPhotos, hasAnyPhotos)
     }
 
     private fun loadStatuses(scheme: Scheme) {
