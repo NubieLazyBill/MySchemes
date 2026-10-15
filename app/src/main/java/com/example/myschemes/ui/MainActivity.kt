@@ -1,7 +1,10 @@
 package com.example.myschemes.ui
 
+import android.content.ContentValues
 import android.content.Intent
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
@@ -15,6 +18,7 @@ import com.example.myschemes.R
 import com.example.myschemes.data.database.SchemeDatabase
 import com.example.myschemes.data.model.Scheme
 import com.example.myschemes.data.repository.SchemeRepository
+import com.example.myschemes.utils.WorkReportExporter
 import com.example.myschemes.worker.NotificationWorker
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -35,11 +39,12 @@ import org.apache.poi.ss.usermodel.*
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.apache.poi.ss.usermodel.FillPatternType
 import org.apache.poi.ss.usermodel.IndexedColors
-import androidx.activity.result.contract.ActivityResultContracts
 import org.apache.poi.ss.usermodel.CellType
-import com.example.myschemes.ui.PhotoViewPagerDialog
 import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.VerticalAlignment
+import com.example.myschemes.utils.DatabaseBackupHelper
+import kotlinx.coroutines.withContext
+import com.example.myschemes.utils.DefectsExporter
 
 class MainActivity : AppCompatActivity() {
 
@@ -52,10 +57,11 @@ class MainActivity : AppCompatActivity() {
 
     private var searchQuery: String = ""
 
-    private var currentCellFilter: String? = null  // ← фильтр по ячейке
+    private var currentCellFilter: String? = null
 
     companion object {
         private const val REQUEST_IMPORT_EXCEL = 1002
+        private const val REQUEST_IMPORT_DB = 1003
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -117,13 +123,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        loadSchemes()  // ← добавляем эту строку
+        loadSchemes()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
 
-        // Настройка поиска
         val searchItem = menu?.findItem(R.id.action_search)
         val searchView = searchItem?.actionView as? androidx.appcompat.widget.SearchView
 
@@ -147,6 +152,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.action_export_defects -> {
+                exportDefects()
+                true
+            }
+            R.id.action_export_db -> {
+                exportDatabase()
+                true
+            }
+            R.id.action_import_db -> {
+                importDatabase()
+                true
+            }
             R.id.action_import_excel -> {
                 importFromExcel()
                 true
@@ -157,6 +174,10 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.action_export_report -> {
                 exportReport()
+                true
+            }
+            R.id.action_export_work -> {
+                exportWorkReport()
                 true
             }
             R.id.action_add_scheme -> {
@@ -192,6 +213,95 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ==================== ЭКСПОРТ В РАБОЧИЙ ФОРМАТ ====================
+
+    private fun exportWorkReport() {
+        lifecycleScope.launch {
+            try {
+                val schemes = repository.getAllSchemes()
+                if (schemes.isEmpty()) {
+                    Toast.makeText(this@MainActivity, "Нет данных для экспорта", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                Toast.makeText(this@MainActivity, "Формирую отчёт...", Toast.LENGTH_SHORT).show()
+
+                val reportFile = WorkReportExporter.export(this@MainActivity, schemes)
+
+                if (reportFile != null) {
+                    saveToDownloads(reportFile)
+                } else {
+                    Toast.makeText(this@MainActivity, "Ошибка создания отчёта", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun saveToDownloads(sourceFile: File) {
+        try {
+            val fileName = sourceFile.name
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, getMimeType(fileName))  // ← динамически
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                }
+
+                val uri = contentResolver.insert(
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    contentValues
+                )
+
+                if (uri != null) {
+                    contentResolver.openOutputStream(uri)?.use { outputStream ->
+                        sourceFile.inputStream().use { inputStream ->
+                            inputStream.copyTo(outputStream)
+                        }
+                    }
+                    Toast.makeText(
+                        this,
+                        "✅ Сохранено в Загрузки: $fileName",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    Toast.makeText(this, "Не удалось сохранить файл", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS
+                )
+                if (!downloadsDir.exists()) downloadsDir.mkdirs()
+                val destFile = File(downloadsDir, fileName)
+                sourceFile.copyTo(destFile, overwrite = true)
+                Toast.makeText(
+                    this,
+                    "✅ Сохранено в Загрузки: $fileName",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Ошибка сохранения: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // Вспомогательный метод
+    private fun getMimeType(fileName: String): String {
+        return when {
+            fileName.endsWith(".zip", ignoreCase = true) -> "application/zip"
+            fileName.endsWith(".xlsx", ignoreCase = true) ->
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            fileName.endsWith(".xls", ignoreCase = true) -> "application/vnd.ms-excel"
+            else -> "application/octet-stream"
+        }
+    }
+
+    // ==================== ДИАЛОГИ И МЕНЮ ====================
+
     private fun showAddSchemeDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_scheme, null)
         val etEquipmentName = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etEquipmentName)
@@ -213,7 +323,6 @@ class MainActivity : AppCompatActivity() {
                     return@setPositiveButton
                 }
 
-                // Дата схемы теперь необязательная
                 val lastRevisionDate = if (lastRevisionDateStr.isNotEmpty()) {
                     try {
                         val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
@@ -225,7 +334,6 @@ class MainActivity : AppCompatActivity() {
                     0L
                 }
 
-                // Если дата схемы не указана, дата пересмотра тоже будет 0
                 val nextRevisionDate = if (lastRevisionDate != 0L) {
                     val calendar = Calendar.getInstance().apply {
                         timeInMillis = lastRevisionDate
@@ -315,7 +423,6 @@ class MainActivity : AppCompatActivity() {
                 recyclerView.visibility = android.view.View.GONE
                 tvEmpty.visibility = android.view.View.VISIBLE
 
-                // Если поиск активен, показываем другое сообщение
                 if (searchQuery.isNotBlank()) {
                     tvEmpty.text = "🔍 Ничего не найдено по запросу \"$searchQuery\""
                 } else {
@@ -327,7 +434,6 @@ class MainActivity : AppCompatActivity() {
                 tvEmpty.visibility = android.view.View.GONE
                 adapter.updateData(sortedSchemes)
 
-                // Формируем подпись с учётом фильтров
                 val filterParts = mutableListOf<String>()
                 if (searchQuery.isNotBlank()) filterParts.add("поиск: \"$searchQuery\"")
                 if (currentCellFilter != null) filterParts.add("ячейка: $currentCellFilter")
@@ -349,6 +455,8 @@ class MainActivity : AppCompatActivity() {
         }
         return isFirst
     }
+
+    // ==================== СТАНДАРТНЫЙ ЭКСПОРТ ОТЧЁТА ====================
 
     private fun exportReport() {
         lifecycleScope.launch {
@@ -377,21 +485,21 @@ class MainActivity : AppCompatActivity() {
             val workbook = XSSFWorkbook()
             val sheet = workbook.createSheet("Шкафы")
 
-            // Стиль для заголовков - тёмно-зелёный фон
             val headerFont = workbook.createFont().apply {
                 bold = true
                 color = IndexedColors.WHITE.index
+                fontHeightInPoints = 10
             }
             val headerStyle = workbook.createCellStyle().apply {
                 fillForegroundColor = IndexedColors.DARK_GREEN.index
                 fillPattern = FillPatternType.SOLID_FOREGROUND
                 setFont(headerFont)
                 alignment = HorizontalAlignment.CENTER
-                verticalAlignment = VerticalAlignment.CENTER
+                verticalAlignment = VerticalAlignment.BOTTOM
                 wrapText = true
+                rotation = 90.toShort()
             }
 
-            // Стиль для статусов +/-
             val plusFont = workbook.createFont().apply {
                 bold = true
                 color = IndexedColors.GREEN.index
@@ -399,6 +507,7 @@ class MainActivity : AppCompatActivity() {
             val plusStyle = workbook.createCellStyle().apply {
                 setFont(plusFont)
                 alignment = HorizontalAlignment.CENTER
+                verticalAlignment = VerticalAlignment.CENTER
             }
 
             val minusFont = workbook.createFont().apply {
@@ -408,78 +517,62 @@ class MainActivity : AppCompatActivity() {
             val minusStyle = workbook.createCellStyle().apply {
                 setFont(minusFont)
                 alignment = HorizontalAlignment.CENTER
+                verticalAlignment = VerticalAlignment.CENTER
             }
 
-            // Стиль для обычных ячеек с переносом текста
             val wrapStyle = workbook.createCellStyle().apply {
                 wrapText = true
                 verticalAlignment = VerticalAlignment.TOP
             }
 
-            // Заголовки - теперь для каждого пункта СВОЯ колонка "Статус" и "Примечание"
             val headers = listOf(
                 "Наименование оборудования",
                 "Ячейка",
-                // 1. Диспетчерское наименование
-                "Диспетчерское наименование",
-                "Примечание",
-                // 2. ДН автоматов, рубильников
-                "ДН автоматов, рубильников",
-                "Примечание",
-                // 3. Инвентарный номер
-                "Инвентарный номер",
-                "Примечание",
-                // 4. Целостность замков
-                "Целостность замков",
-                "Примечание",
-                // 5. Уплотнение шкафа
-                "Уплотнение шкафа",
-                "Примечание",
-                // 6. Заходы кабелей
-                "Заходы кабелей",
-                "Примечание",
-                // 7. Нет оголённых жил
-                "Нет оголённых жил",
-                "Примечание",
-                // 8. Адресные бирки
-                "Адресные бирки",
-                "Примечание",
-                // 9. Целостность клеммников
-                "Целостность клеммников",
-                "Примечание",
-                // 10. Окраска
-                "Окраска",
-                "Примечание",
-                // 11. Обогрев
-                "Обогрев",
-                "Примечание",
-                // 12. Заземление
-                "Заземление",
-                "Примечание",
-                // Схема
+                "Диспетчерское наименование", "Прим.",
+                "ДН автоматов, рубильников", "Прим.",
+                "Инвентарный номер", "Прим.",
+                "Целостность замков", "Прим.",
+                "Уплотнение шкафа", "Прим.",
+                "Заходы кабелей", "Прим.",
+                "Нет оголённых жил", "Прим.",
+                "Адресные бирки", "Прим.",
+                "Целостность клеммников", "Прим.",
+                "Окраска", "Прим.",
+                "Обогрев", "Прим.",
+                "Заземление", "Прим.",
                 "Номер схемы",
                 "Дата схемы",
                 "Дата пересмотра"
             )
 
             val headerRow = sheet.createRow(0)
+            headerRow.heightInPoints = 150f
+
             headers.forEachIndexed { index, header ->
                 val cell = headerRow.createCell(index)
                 cell.setCellValue(header)
                 cell.cellStyle = headerStyle
-                sheet.setColumnWidth(index, if (header == "Примечание") 5000 else 4000)
             }
 
-            // Данные
+            headers.forEachIndexed { index, header ->
+                val width = when {
+                    header == "Наименование оборудования" -> 9000
+                    header == "Ячейка" -> 4500
+                    header == "Прим." -> 6000
+                    header == "Номер схемы" -> 4000
+                    header == "Дата схемы" || header == "Дата пересмотра" -> 4000
+                    else -> 1800
+                }
+                sheet.setColumnWidth(index, width)
+            }
+
             schemes.forEachIndexed { rowIndex, scheme ->
                 val row = sheet.createRow(rowIndex + 1)
                 var colIndex = 0
 
-                // Основные поля
                 row.createCell(colIndex++).setCellValue(scheme.equipmentName)
                 row.createCell(colIndex++).setCellValue(scheme.cellNumber ?: "")
 
-                // Функция для добавления статуса и примечания
                 fun addStatusAndNote(checked: Boolean, note: String?) {
                     val statusCell = row.createCell(colIndex++)
                     statusCell.setCellValue(if (checked) "+" else "-")
@@ -490,32 +583,19 @@ class MainActivity : AppCompatActivity() {
                     noteCell.cellStyle = wrapStyle
                 }
 
-                // 1. Диспетчерское наименование
                 addStatusAndNote(scheme.cabinetNameChecked, scheme.cabinetNameNote)
-                // 2. ДН автоматов, рубильников
                 addStatusAndNote(scheme.switchesNameChecked, scheme.switchesNameNote)
-                // 3. Инвентарный номер
                 addStatusAndNote(scheme.inventoryNumberChecked, scheme.inventoryNumberNote)
-                // 4. Целостность замков
                 addStatusAndNote(scheme.lockIntegrity, scheme.lockIntegrityNote)
-                // 5. Уплотнение шкафа
                 addStatusAndNote(scheme.sealIntegrity, scheme.sealIntegrityNote)
-                // 6. Заходы кабелей
                 addStatusAndNote(scheme.cableEntries, scheme.cableEntriesNote)
-                // 7. Нет оголённых жил
                 addStatusAndNote(scheme.noBareWires, scheme.noBareWiresNote)
-                // 8. Адресные бирки
                 addStatusAndNote(scheme.addressLabels, scheme.addressLabelsNote)
-                // 9. Целостность клеммников
                 addStatusAndNote(scheme.terminalsIntegrity, scheme.terminalsIntegrityNote)
-                // 10. Окраска
                 addStatusAndNote(scheme.painting, scheme.paintingNote)
-                // 11. Обогрев
                 addStatusAndNote(scheme.heating, scheme.heatingNote)
-                // 12. Заземление
                 addStatusAndNote(scheme.grounding, scheme.groundingNote)
 
-                // Поля схемы
                 row.createCell(colIndex++).setCellValue(scheme.schemeNumber ?: "")
                 row.createCell(colIndex++).setCellValue(
                     if (scheme.lastRevisionDate != 0L) dateFormat.format(Date(scheme.lastRevisionDate)) else ""
@@ -541,15 +621,20 @@ class MainActivity : AppCompatActivity() {
             "${packageName}.fileprovider",
             file
         )
+
+        // Определяем тип по расширению
+        val mimeType = getMimeType(file.name)
+
         val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            type = mimeType
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         startActivity(Intent.createChooser(intent, "Сохранить отчёт"))
     }
 
-    //Иморт из Excell
+    // ==================== ИМПОРТ ИЗ EXCEL ====================
+
     private fun importFromExcel() {
         val intent = Intent(Intent.ACTION_GET_CONTENT)
         intent.type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -564,8 +649,8 @@ class MainActivity : AppCompatActivity() {
                 val existingNames = existingSchemes.map { it.equipmentName }.toSet()
 
                 val newSchemes = mutableListOf<Scheme>()
-                var nextId = (existingSchemes.maxOfOrNull { it.id } ?: 0) + 1  // ← var вместо val
-                var nextItemNumber = (existingSchemes.maxOfOrNull { it.itemNumber ?: 0 } ?: 0) + 1  // ← var вместо val
+                var nextId = (existingSchemes.maxOfOrNull { it.id } ?: 0) + 1
+                var nextItemNumber = (existingSchemes.maxOfOrNull { it.itemNumber ?: 0 } ?: 0) + 1
 
                 contentResolver.openInputStream(uri)?.use { inputStream ->
                     val workbook = XSSFWorkbook(inputStream)
@@ -574,8 +659,6 @@ class MainActivity : AppCompatActivity() {
                     var rowIndex = 0
                     for (row in sheet) {
                         rowIndex++
-                        //Пропускаем первую строку (заголовки)
-                        //if (rowIndex == 1) continue // пропускаем заголовки
 
                         val cellNumberCell = row.getCell(0)
                         val equipmentNameCell = row.getCell(1)
@@ -628,12 +711,20 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_IMPORT_EXCEL && resultCode == RESULT_OK) {
-            data?.data?.let { uri ->
-                processExcelImport(uri)
+        if (resultCode == RESULT_OK) {
+            when (requestCode) {
+                REQUEST_IMPORT_EXCEL -> {
+                    data?.data?.let { uri -> processExcelImport(uri) }
+                }
+                REQUEST_IMPORT_DB -> {
+                    data?.data?.let { uri -> processDatabaseImport(uri) }
+                }
             }
         }
     }
+
+    // ==================== СОРТИРОВКА ====================
+
     private fun showSortDialog() {
         val sortOptions = arrayOf(
             "📛 По наименованию (А-Я)",
@@ -653,7 +744,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sortSchemes(schemes: List<Scheme>): List<Scheme> {
-        // 1. Фильтр по поиску
         val searched = if (searchQuery.isNotBlank()) {
             val q = searchQuery.lowercase().trim()
             schemes.filter { scheme ->
@@ -665,14 +755,12 @@ class MainActivity : AppCompatActivity() {
             schemes
         }
 
-        // 2. Фильтр по ячейке
         val filtered = if (currentCellFilter != null) {
             searched.filter { it.cellNumber == currentCellFilter }
         } else {
             searched
         }
 
-        // 3. Сортировка
         return when (currentSortMode) {
             0 -> filtered.sortedBy { it.equipmentName.lowercase() }
             1 -> filtered.sortedBy {
@@ -694,6 +782,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ==================== ФОТО ====================
+
     private fun showAllPhotosForScheme(scheme: Scheme) {
         val allPhotos = getAllPhotosFromScheme(scheme).toMutableList()
         if (allPhotos.isNotEmpty()) {
@@ -701,10 +791,7 @@ class MainActivity : AppCompatActivity() {
                 activity = this,
                 title = "Все фото: ${scheme.equipmentName}",
                 photos = allPhotos,
-                onPhotosChanged = { updatedPhotos ->
-                    // Обновлять фото не нужно, так как это просто просмотр
-                    // Если хотите разрешить удаление из этого диалога - нужно будет обновить схему
-                }
+                onPhotosChanged = { }
             )
             dialog.show(scheme.equipmentName, "Все фото")
         } else {
@@ -728,6 +815,8 @@ class MainActivity : AppCompatActivity() {
         allPhotos.addAll(scheme.groundingPhotos)
         return allPhotos
     }
+
+    // ==================== ОТМЕТКИ ОСМОТРА ====================
 
     private fun updateInspectedStatus(scheme: Scheme, isInspected: Boolean) {
         lifecycleScope.launch {
@@ -765,6 +854,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ==================== ФИЛЬТР ПО ЯЧЕЙКЕ ====================
+
     private fun showCellFilterDialog() {
         lifecycleScope.launch {
             val allSchemes = repository.getAllSchemes()
@@ -797,4 +888,119 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.subtitle = null
     }
 
+    // ==================== ЭКСПОРТ БД ====================
+
+    private fun exportDatabase() {
+        lifecycleScope.launch {
+            try {
+                val schemes = repository.getAllSchemes()
+                if (schemes.isEmpty()) {
+                    Toast.makeText(this@MainActivity, "Нет данных для экспорта", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                Toast.makeText(this@MainActivity, "Формирую архив...", Toast.LENGTH_SHORT).show()
+
+                val timeStamp = SimpleDateFormat("dd.MM.yyyy_HH-mm", Locale.getDefault()).format(Date())
+                val fileName = "MySchemes_backup_$timeStamp.zip"
+                val tempFile = File(cacheDir, fileName)
+
+                val success = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    DatabaseBackupHelper.exportBackup(this@MainActivity, schemes, tempFile)
+                }
+
+                if (success) {
+                    saveToDownloads(tempFile)
+                } else {
+                    Toast.makeText(this@MainActivity, "Ошибка создания архива", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+// ==================== ИМПОРТ БД ====================
+
+    private fun importDatabase() {
+        AlertDialog.Builder(this)
+            .setTitle("⚠️ Импорт базы данных")
+            .setMessage("Все текущие шкафы и фото будут ЗАМЕНЕНЫ данными из архива.\n\nПродолжить?")
+            .setPositiveButton("Да, заменить") { _, _ ->
+                val intent = Intent(Intent.ACTION_GET_CONTENT)
+                intent.type = "application/zip"
+                intent.addCategory(Intent.CATEGORY_OPENABLE)
+                startActivityForResult(
+                    Intent.createChooser(intent, "Выберите архив"),
+                    REQUEST_IMPORT_DB
+                )
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun processDatabaseImport(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                Toast.makeText(this@MainActivity, "Восстанавливаю...", Toast.LENGTH_SHORT).show()
+
+                val result = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    DatabaseBackupHelper.importBackup(this@MainActivity, uri)
+                }
+
+                when (result) {
+                    is DatabaseBackupHelper.ImportResult.Success -> {
+                        // Очищаем текущую БД и загружаем импортированные данные
+                        repository.saveSchemes(result.schemes)
+                        loadSchemes()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "✅ Восстановлено шкафов: ${result.schemes.size}, фото: ${result.photosRestored}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    is DatabaseBackupHelper.ImportResult.Error -> {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "❌ ${result.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    // ==================== ВЫГРУЗКА ДЕФЕКТОВ ====================
+
+    private fun exportDefects() {
+        lifecycleScope.launch {
+            try {
+                val schemes = repository.getAllSchemes()
+                if (schemes.isEmpty()) {
+                    Toast.makeText(this@MainActivity, "Нет данных для экспорта", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                Toast.makeText(this@MainActivity, "Формирую список дефектов...", Toast.LENGTH_SHORT).show()
+
+                val reportFile = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    DefectsExporter.export(this@MainActivity, schemes)
+                }
+
+                if (reportFile != null) {
+                    shareFile(reportFile)   // ← теперь через "Поделиться"
+                } else {
+                    Toast.makeText(this@MainActivity, "Ошибка создания файла", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 }

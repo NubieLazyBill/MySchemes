@@ -39,6 +39,26 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_export_work"
+        android:title="📤 Отчёт для работы"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_export_defects"
+        android:title="📋 Выгрузка дефектов"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_export_db"
+        android:title="💾 Экспорт базы данных"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_import_db"
+        android:title="📥 Импорт базы данных"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_reset_inspected"
         android:title="🔄 Сбросить отметки"
         app:showAsAction="never" />

@@ -13,9 +13,19 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "2.6.1"
+        versionName = "2.6.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            // Путь к keystore. Замени на свой!
+            storeFile = file("C:/Users/Lazy/my-release-key.jks")
+            storePassword = "твой_пароль_хранилища"
+            keyAlias = "myschemes"
+            keyPassword = "твой_пароль_ключа"
+        }
     }
 
     buildTypes {
@@ -25,6 +35,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
